@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    active: local
+
+  datasource:
+    url: jdbc:mysql://inha-pj-09-rds.cj24wem202yj.us-east-1.rds.amazonaws.com:3306/diary
+    username: admin
+    password: inhateam9
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        use_sql_comments: true
+        enable_lazy_load_no_trans: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
