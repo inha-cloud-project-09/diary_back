@@ -21,3 +21,13 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+
+cloud:
+  aws:
+    region:
+      static: us-east-1
+    s3:
+      bucket: inha-pj-09-s3
+      stack.auto: false
+    cloudfront:
+      distribution-domain:
