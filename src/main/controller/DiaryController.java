@@ -1,87 +1,99 @@
-package com.diary.api.diary.controller;
+package com.diary.api.controller;
 
+import com.diary.api.common.ApiResponse;
 import com.diary.api.diary.Diary;
-import com.diary.api.diary.service.DiaryService;
+import com.diary.api.service.DiaryService;
 import com.diary.api.user.User;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/diaries")
 @RequiredArgsConstructor
+@Tag(name = "Diary", description = "일기 관련 API")
 public class DiaryController {
     private final DiaryService diaryService;
 
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> getDiaries(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(defaultValue = "latest") String sort,
-            @RequestParam(required = false) String mood,
-            @RequestParam(required = false) List<String> tags) {
-        
-        Sort sortOption = switch (sort) {
-            case "popular" -> Sort.by("viewCount").descending();
-            case "oldest" -> Sort.by("createdAt").ascending();
-            default -> Sort.by("createdAt").descending();
-        };
-
-        PageRequest pageRequest = PageRequest.of(page, limit, sortOption);
-        return ResponseEntity.ok(diaryService.getDiariesWithFilters(pageRequest, mood, tags));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getDiary(@PathVariable Long id) {
-        return ResponseEntity.ok(diaryService.getDiaryWithDetails(id));
-    }
-
+    @Operation(summary = "일기 생성", description = "새로운 일기를 생성합니다.")
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createDiary(
-            @AuthenticationPrincipal User user,
-            @RequestBody Diary diary) {
-        diary.setUser(user);
-        return ResponseEntity.ok(diaryService.createDiary(diary));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Diary>> createDiary(
+            @Valid @RequestBody Diary diary,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.createDiary(diary, user));
     }
 
+    @Operation(summary = "일기 조회", description = "특정 일기의 상세 정보를 조회합니다.")
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Diary>> getDiary(
+            @Parameter(description = "일기 ID") @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.getDiary(id, user));
+    }
+
+    @Operation(summary = "일기 수정", description = "기존 일기를 수정합니다.")
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateDiary(
-            @PathVariable Long id,
-            @RequestBody Diary updatedDiary) {
-        return ResponseEntity.ok(diaryService.updateDiary(id, updatedDiary));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Diary>> updateDiary(
+            @Parameter(description = "일기 ID") @PathVariable Long id,
+            @Valid @RequestBody Diary diary,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.updateDiary(id, diary, user));
     }
 
+    @Operation(summary = "일기 삭제", description = "일기를 삭제합니다.")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Boolean>> deleteDiary(@PathVariable Long id) {
-        diaryService.deleteDiary(id);
-        return ResponseEntity.ok(Map.of("success", true));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> deleteDiary(
+            @Parameter(description = "일기 ID") @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.deleteDiary(id, user));
     }
 
-    @GetMapping("/dashboard/emotions")
-    public ResponseEntity<Map<String, Object>> getEmotionStats(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime endDate) {
-        return ResponseEntity.ok(diaryService.getEmotionStats(startDate, endDate));
-    }
-
-    @GetMapping("/dashboard/recommendations")
-    public ResponseEntity<List<Map<String, Object>>> getRecommendations() {
-        return ResponseEntity.ok(diaryService.getRecommendedDiaries());
-    }
-
-    @GetMapping("/cluster/my-latest-diaries")
-    public ResponseEntity<Map<String, Object>> getMyLatestClusterDiaries(
+    @Operation(summary = "사용자 일기 목록 조회", description = "특정 사용자의 일기 목록을 조회합니다.")
+    @GetMapping("/user")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Page<Diary>>> getUserDiaries(
             @AuthenticationPrincipal User user,
-            @RequestParam(defaultValue = "3") int limit) {
-        return ResponseEntity.ok(diaryService.getLatestClusterDiaries(user, limit));
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(diaryService.getUserDiaries(user, pageable));
+    }
+
+    @Operation(summary = "기간별 일기 조회", description = "특정 기간의 일기를 조회합니다.")
+    @GetMapping("/date-range")
+    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByDateRange(
+            @RequestParam LocalDateTime start,
+            @RequestParam LocalDateTime end,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(diaryService.getPublicDiariesByDateRange(start, end, pageable));
+    }
+
+    @Operation(summary = "감정별 일기 조회", description = "특정 감정의 일기를 조회합니다.")
+    @GetMapping("/emotion/{emotion}")
+    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByEmotion(
+            @Parameter(description = "감정") @PathVariable String emotion) {
+        return ResponseEntity.ok(diaryService.getDiariesByEmotion(emotion));
+    }
+
+    @Operation(summary = "태그별 일기 조회", description = "특정 태그의 일기를 조회합니다.")
+    @GetMapping("/tags")
+    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByTags(
+            @RequestParam List<String> tags) {
+        return ResponseEntity.ok(diaryService.getDiariesByTags(tags));
     }
 } 
