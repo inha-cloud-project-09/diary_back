@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 @Entity
-@Table(name = "diaries")
+@Table(name = "one_line_diaries")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Diary {
+public class OneLineDiary {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,17 +28,11 @@ public class Diary {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, columnDefinition = "text")
+    @Column(nullable = false, length = 255)
     private String content;
 
     @Column(name = "is_public")
     private Boolean isPublic;
-
-    @Column(columnDefinition = "text")
-    private String summary;
-
-    @Column(columnDefinition = "text")
-    private String feedback;
 
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> tags;
@@ -53,12 +47,6 @@ public class Diary {
     @Column(name = "analysis_status", length = 20)
     private String analysisStatus;
 
-    @Column(name = "analyzed_at")
-    private LocalDateTime analyzedAt;
-
-    @Column(name = "image_url", length = 500)
-    private String imageUrl;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -68,4 +56,4 @@ public class Diary {
         analysisStatus = analysisStatus == null ? "pending" : analysisStatus;
         createdAt = LocalDateTime.now();
     }
-}
+} 
