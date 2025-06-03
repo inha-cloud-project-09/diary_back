@@ -1,16 +1,21 @@
-package com.diary.service;
+package com.diary.api.service;
 
-import com.diary.domain.Community;
-import com.diary.repository.CommunityRepository;
+import com.diary.api.common.ApiResponse;
+import com.diary.api.common.exception.BusinessException;
+import com.diary.api.common.exception.ResourceNotFoundException;
+import com.diary.api.community.Community;
+import com.diary.api.community.repository.CommunityRepository;
+import com.diary.api.user.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -18,63 +23,80 @@ public class CommunityService {
     private final CommunityRepository communityRepository;
 
     @Transactional
-    public Community createPost(Community community) {
-        return communityRepository.save(community);
+    public ApiResponse<Community> createCommunity(Community community, User user) {
+        try {
+            community.setCreator(user);
+            Community savedCommunity = communityRepository.save(community);
+            return ApiResponse.success(savedCommunity);
+        } catch (Exception e) {
+            log.error("커뮤니티 생성 중 오류 발생", e);
+            throw new BusinessException("커뮤니티 생성에 실패했습니다.");
+        }
     }
 
-    public Community getPost(Long id) {
-        return communityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-    }
-
-    public Page<Community> getAllPosts(Pageable pageable) {
-        return communityRepository.findAll(pageable);
-    }
-
-    public Page<Community> searchPosts(String keyword, Pageable pageable) {
-        return communityRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageable);
-    }
-
-    public List<Community> getPostsByAuthor(String author) {
-        return communityRepository.findByAuthor(author);
-    }
-
-    public List<Community> getPostsByDateRange(LocalDateTime start, LocalDateTime end) {
-        return communityRepository.findByCreatedAtBetween(start, end);
-    }
-
-    public List<Community> getPopularPostsByViews(Pageable pageable) {
-        return communityRepository.findAllByOrderByViewCountDesc(pageable);
-    }
-
-    public List<Community> getPopularPostsByLikes(Pageable pageable) {
-        return communityRepository.findAllByOrderByLikeCountDesc(pageable);
+    public ApiResponse<Community> getCommunity(Long id) {
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
+        return ApiResponse.success(community);
     }
 
     @Transactional
-    public Community updatePost(Long id, Community updatedPost) {
-        Community post = getPost(id);
-        post.setTitle(updatedPost.getTitle());
-        post.setContent(updatedPost.getContent());
-        return communityRepository.save(post);
+    public ApiResponse<Community> updateCommunity(Long id, Community updateCommunity, User user) {
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
+
+        if (!community.getCreator().equals(user)) {
+            throw new BusinessException("커뮤니티 수정 권한이 없습니다.");
+        }
+
+        community.update(updateCommunity);
+        return ApiResponse.success(community);
     }
 
     @Transactional
-    public void deletePost(Long id) {
-        communityRepository.deleteById(id);
+    public ApiResponse<Void> deleteCommunity(Long id, User user) {
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
+
+        if (!community.getCreator().equals(user)) {
+            throw new BusinessException("커뮤니티 삭제 권한이 없습니다.");
+        }
+
+        communityRepository.delete(community);
+        return ApiResponse.success(null);
+    }
+
+    public ApiResponse<Page<Community>> getCommunities(Pageable pageable) {
+        return ApiResponse.success(communityRepository.findAll(pageable));
+    }
+
+    public ApiResponse<List<Community>> searchCommunities(String name, String emotionTheme, String creator) {
+        return ApiResponse.success(communityRepository.searchCommunities(name, emotionTheme, creator));
     }
 
     @Transactional
-    public Community incrementViewCount(Long id) {
-        Community post = getPost(id);
-        post.setViewCount(post.getViewCount() + 1);
-        return communityRepository.save(post);
+    public ApiResponse<Void> joinCommunity(Long id, User user) {
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
+
+        if (community.getMembers().contains(user)) {
+            throw new BusinessException("이미 가입된 커뮤니티입니다.");
+        }
+
+        community.addMember(user);
+        return ApiResponse.success(null);
     }
 
     @Transactional
-    public Community incrementLikeCount(Long id) {
-        Community post = getPost(id);
-        post.setLikeCount(post.getLikeCount() + 1);
-        return communityRepository.save(post);
+    public ApiResponse<Void> leaveCommunity(Long id, User user) {
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
+
+        if (!community.getMembers().contains(user)) {
+            throw new BusinessException("가입하지 않은 커뮤니티입니다.");
+        }
+
+        community.removeMember(user);
+        return ApiResponse.success(null);
     }
 } 
