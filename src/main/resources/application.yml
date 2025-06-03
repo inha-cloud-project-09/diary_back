@@ -22,12 +22,24 @@ spring:
           lob:
             non_contextual_creation: true
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1041447353700-ck5s40n1e4ua81tln06a10cas4pred83.apps.googleusercontent.com
+            client-secret: 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
+            client-name: Google
+            scope: "openid,profile,email"
+
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://www.googleapis.com/oauth2/v4/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
 cloud:
   aws:
     region:
       static: us-east-1
-    s3:
-      bucket: inha-pj-09-s3
-      stack.auto: false
-    cloudfront:
-      distribution-domain:

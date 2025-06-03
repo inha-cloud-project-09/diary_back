@@ -41,11 +41,8 @@ public class OauthController {
     public void googleLogin(HttpServletResponse response) throws IOException {
         // 현재 활성화된 프로필 확인
         boolean isProdProfile = Arrays.asList(environment.getActiveProfiles()).contains("prod");
-
         // 환경에 따라 리다이렉트 URL 결정
-        String redirectUrl = isProdProfile
-                ? ""
-                : "";
+        String redirectUrl = "http://localhost:8080/oauth2/authorization/google";
         response.sendRedirect(redirectUrl);
     }
 
