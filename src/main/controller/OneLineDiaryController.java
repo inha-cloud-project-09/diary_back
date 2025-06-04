@@ -87,4 +87,31 @@ public class OneLineDiaryController {
             @RequestParam List<String> tags) {
         return ResponseEntity.ok(oneLineDiaryService.getOneLineDiariesByTags(tags));
     }
+
+    @Operation(summary = "기간별 한 줄 일기 조회", description = "특정 기간의 한 줄 일기를 조회합니다.")
+    @GetMapping("/period")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<OneLineDiary>>> getOneLineDiariesByPeriod(
+            @Parameter(description = "시작일") @RequestParam LocalDateTime start,
+            @Parameter(description = "종료일") @RequestParam LocalDateTime end,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(oneLineDiaryService.getUserOneLineDiariesByDateRange(user, start, end));
+    }
+
+    @Operation(summary = "분석 상태별 한 줄 일기 조회", description = "특정 분석 상태의 한 줄 일기를 조회합니다.")
+    @GetMapping("/analysis-status/{status}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<OneLineDiary>>> getOneLineDiariesByAnalysisStatus(
+            @Parameter(description = "분석 상태") @PathVariable String status) {
+        return ResponseEntity.ok(oneLineDiaryService.getOneLineDiariesByAnalysisStatus(status));
+    }
+
+    @Operation(summary = "사용자의 분석 상태별 한 줄 일기 조회", description = "현재 로그인한 사용자의 특정 분석 상태의 한 줄 일기를 조회합니다.")
+    @GetMapping("/my/analysis-status/{status}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<OneLineDiary>>> getMyOneLineDiariesByAnalysisStatus(
+            @Parameter(description = "분석 상태") @PathVariable String status,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(oneLineDiaryService.getUserOneLineDiariesByAnalysisStatus(user, status));
+    }
 } 

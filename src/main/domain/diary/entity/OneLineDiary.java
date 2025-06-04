@@ -56,4 +56,35 @@ public class OneLineDiary {
         analysisStatus = analysisStatus == null ? "pending" : analysisStatus;
         createdAt = LocalDateTime.now();
     }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void updateContent(String content) {
+        this.content = content;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public void setTags(Map<String, Object> tags) {
+        this.tags = tags;
+    }
+
+    public void setEmotion(String emotion) {
+        this.primaryEmotion = emotion;
+    }
+
+    public void updateAnalysisStatus(String status) {
+        this.analysisStatus = status;
+    }
+
+    public void update(OneLineDiary updateOneLineDiary) {
+        this.content = updateOneLineDiary.getContent();
+        this.isPublic = updateOneLineDiary.getIsPublic();
+        this.tags = updateOneLineDiary.getTags();
+        this.primaryEmotion = updateOneLineDiary.getPrimaryEmotion();
+    }
 } 
