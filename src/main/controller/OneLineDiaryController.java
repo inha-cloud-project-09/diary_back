@@ -74,15 +74,6 @@ public class OneLineDiaryController {
         return ResponseEntity.ok(oneLineDiaryService.getUserOneLineDiaries(user, pageable));
     }
 
-    @Operation(summary = "기간별 한 줄 일기 조회", description = "특정 기간의 한 줄 일기를 조회합니다.")
-    @GetMapping("/date-range")
-    public ResponseEntity<ApiResponse<List<OneLineDiary>>> getOneLineDiariesByDateRange(
-            @RequestParam LocalDateTime start,
-            @RequestParam LocalDateTime end,
-            @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(oneLineDiaryService.getPublicOneLineDiariesByDateRange(start, end, pageable));
-    }
-
     @Operation(summary = "감정별 한 줄 일기 조회", description = "특정 감정의 한 줄 일기를 조회합니다.")
     @GetMapping("/emotion/{emotion}")
     public ResponseEntity<ApiResponse<List<OneLineDiary>>> getOneLineDiariesByEmotion(

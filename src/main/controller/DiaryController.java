@@ -2,6 +2,8 @@ package com.diary.api.controller;
 
 import com.diary.api.common.ApiResponse;
 import com.diary.api.diary.Diary;
+import com.diary.api.dto.diary.CreateDiaryRequest;
+import com.diary.api.dto.diary.UpdateDiaryRequest;
 import com.diary.api.service.DiaryService;
 import com.diary.api.user.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,12 +35,12 @@ public class DiaryController {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Diary>> createDiary(
-            @Valid @RequestBody Diary diary,
+            @Valid @RequestBody CreateDiaryRequest request,
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(diaryService.createDiary(diary, user));
+        return ResponseEntity.ok(diaryService.createDiary(request, user));
     }
 
-    @Operation(summary = "일기 조회", description = "특정 일기의 상세 정보를 조회합니다.")
+    @Operation(summary = "일기 조회", description = "ID로 일기를 조회합니다.")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Diary>> getDiary(
             @Parameter(description = "일기 ID") @PathVariable Long id,
@@ -46,14 +48,22 @@ public class DiaryController {
         return ResponseEntity.ok(diaryService.getDiary(id, user));
     }
 
+    @Operation(summary = "사용자 일기 목록 조회", description = "현재 로그인한 사용자의 모든 일기를 조회합니다.")
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<Diary>>> getMyDiaries(
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.getUserDiaries(user));
+    }
+
     @Operation(summary = "일기 수정", description = "기존 일기를 수정합니다.")
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Diary>> updateDiary(
             @Parameter(description = "일기 ID") @PathVariable Long id,
-            @Valid @RequestBody Diary diary,
+            @Valid @RequestBody UpdateDiaryRequest request,
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(diaryService.updateDiary(id, diary, user));
+        return ResponseEntity.ok(diaryService.updateDiary(id, request, user));
     }
 
     @Operation(summary = "일기 삭제", description = "일기를 삭제합니다.")
@@ -63,24 +73,6 @@ public class DiaryController {
             @Parameter(description = "일기 ID") @PathVariable Long id,
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(diaryService.deleteDiary(id, user));
-    }
-
-    @Operation(summary = "사용자 일기 목록 조회", description = "특정 사용자의 일기 목록을 조회합니다.")
-    @GetMapping("/user")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Page<Diary>>> getUserDiaries(
-            @AuthenticationPrincipal User user,
-            @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(diaryService.getUserDiaries(user, pageable));
-    }
-
-    @Operation(summary = "기간별 일기 조회", description = "특정 기간의 일기를 조회합니다.")
-    @GetMapping("/date-range")
-    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByDateRange(
-            @RequestParam LocalDateTime start,
-            @RequestParam LocalDateTime end,
-            @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(diaryService.getPublicDiariesByDateRange(start, end, pageable));
     }
 
     @Operation(summary = "감정별 일기 조회", description = "특정 감정의 일기를 조회합니다.")
@@ -95,5 +87,32 @@ public class DiaryController {
     public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByTags(
             @RequestParam List<String> tags) {
         return ResponseEntity.ok(diaryService.getDiariesByTags(tags));
+    }
+
+    @Operation(summary = "기간별 일기 조회", description = "특정 기간의 일기를 조회합니다.")
+    @GetMapping("/period")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByPeriod(
+            @Parameter(description = "시작일") @RequestParam LocalDateTime start,
+            @Parameter(description = "종료일") @RequestParam LocalDateTime end,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.getUserDiariesByDateRange(user, start, end));
+    }
+
+    @Operation(summary = "분석 상태별 일기 조회", description = "특정 분석 상태의 일기를 조회합니다.")
+    @GetMapping("/analysis-status/{status}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByAnalysisStatus(
+            @Parameter(description = "분석 상태") @PathVariable String status) {
+        return ResponseEntity.ok(diaryService.getDiariesByAnalysisStatus(status));
+    }
+
+    @Operation(summary = "사용자의 분석 상태별 일기 조회", description = "현재 로그인한 사용자의 특정 분석 상태의 일기를 조회합니다.")
+    @GetMapping("/my/analysis-status/{status}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<Diary>>> getMyDiariesByAnalysisStatus(
+            @Parameter(description = "분석 상태") @PathVariable String status,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(diaryService.getUserDiariesByAnalysisStatus(user, status));
     }
 } 

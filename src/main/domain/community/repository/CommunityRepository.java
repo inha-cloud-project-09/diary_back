@@ -11,9 +11,6 @@ import java.util.List;
 
 @Repository
 public interface CommunityRepository extends JpaRepository<Community, Long> {
-    Page<Community> findByTitleContainingOrContentContaining(String title, String content, Pageable pageable);
-    List<Community> findByAuthor(String author);
-    List<Community> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
-    List<Community> findAllByOrderByViewCountDesc(Pageable pageable);
-    List<Community> findAllByOrderByLikeCountDesc(Pageable pageable);
+    List<Community> findAllByUserId(String userId);
+    List<Community> findByUserIdAndCommunityId(String userId, Long communityId);
 } 

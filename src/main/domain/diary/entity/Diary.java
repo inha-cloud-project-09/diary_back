@@ -68,4 +68,31 @@ public class Diary {
         analysisStatus = analysisStatus == null ? "pending" : analysisStatus;
         createdAt = LocalDateTime.now();
     }
+
+    public void updateContent(String content) {
+        this.content = content;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public void setEmotion(String emotion) {
+        this.primaryEmotion = emotion;
+    }
+
+    public void setTags(Map<String, Object> tags) {
+        this.tags = tags;
+    }
+
+    public void updateAnalysisStatus(String status) {
+        this.analysisStatus = status;
+        if ("completed".equals(status)) {
+            this.analyzedAt = LocalDateTime.now();
+        }
+    }
 }
