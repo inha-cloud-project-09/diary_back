@@ -3,7 +3,7 @@ spring:
     active: local
 
   datasource:
-    url: jdbc:mysql://inha-pj-09-rds.cj24wem202yj.us-east-1.rds.amazonaws.com:3306/diary
+    url: jdbc:mysql://inha-pj-09-rds.cj24wem202yj.us-east-1.rds.amazonaws.com:3306/emotion_diary
     username: admin
     password: inhateam9
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -43,3 +43,7 @@ cloud:
   aws:
     region:
       static: us-east-1
+
+jwt:
+  secret: your-secret-key-here-must-be-at-least-32-characters-long
+  expiration: 86400000 # 24시간
