@@ -8,101 +8,100 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 @Tag(name = "Community", description = "커뮤니티 관련 API")
 @RestController
-@RequestMapping("/api/clusters")
+@RequestMapping("/api/communities")
 @RequiredArgsConstructor
 public class CommunityController {
     private final CommunityService communityService;
 
     @Operation(summary = "커뮤니티 생성", description = "새로운 커뮤니티를 생성합니다.")
     @PostMapping
-    public ResponseEntity<ApiResponse<Community>> createCluster(
-            @AuthenticationPrincipal User user,
-            @RequestBody Community community) {
-        community.setCreator(user);
-        return ResponseEntity.ok(communityService.createCluster(community));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Community>> createCommunity(
+            @Valid @RequestBody Community community,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(communityService.createCommunity(community, user));
     }
 
     @Operation(summary = "커뮤니티 조회", description = "특정 커뮤니티의 상세 정보를 조회합니다.")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Community>> getCluster(@PathVariable Long id) {
-        return ResponseEntity.ok(communityService.getClusterWithDetails(id));
+    public ResponseEntity<ApiResponse<Community>> getCommunity(
+            @Parameter(description = "커뮤니티 ID") @PathVariable Long id) {
+        return ResponseEntity.ok(communityService.getCommunity(id));
     }
 
     @Operation(summary = "커뮤니티 수정", description = "기존 커뮤니티를 수정합니다.")
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Community>> updateCluster(
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Community>> updateCommunity(
             @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
-            @RequestBody Community updatedCluster) {
-        return ResponseEntity.ok(communityService.updateCluster(id, updatedCluster));
+            @Valid @RequestBody Community community,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(communityService.updateCommunity(id, community, user));
     }
 
     @Operation(summary = "커뮤니티 삭제", description = "커뮤니티를 삭제합니다.")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteCluster(@PathVariable Long id) {
-        communityService.deleteCluster(id);
-        return ResponseEntity.ok(ApiResponse.of(true));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> deleteCommunity(
+            @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(communityService.deleteCommunity(id, user));
     }
 
-    @Operation(summary = "커뮤니티 가입", description = "커뮤니티에 가입합니다.")
-    @PostMapping("/{id}/join")
-    public ResponseEntity<ApiResponse<Void>> joinCluster(
-            @AuthenticationPrincipal User user,
-            @PathVariable Long id) {
-        return ResponseEntity.ok(communityService.joinCluster(user, id));
+    @Operation(summary = "기본 커뮤니티 목록 조회", description = "기본 커뮤니티 목록을 조회합니다.")
+    @GetMapping("/default")
+    public ResponseEntity<ApiResponse<List<Community>>> getDefaultCommunities() {
+        return ResponseEntity.ok(communityService.getDefaultCommunities());
     }
 
-    @Operation(summary = "커뮤니티 탈퇴", description = "커뮤니티에서 탈퇴합니다.")
-    @PostMapping("/{id}/leave")
-    public ResponseEntity<ApiResponse<Void>> leaveCluster(
-            @AuthenticationPrincipal User user,
-            @PathVariable Long id) {
-        return ResponseEntity.ok(communityService.leaveCluster(user, id));
-    }
-
-    @Operation(summary = "커뮤니티 목록 조회", description = "커뮤니티 목록을 조회합니다.")
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<Community>>> getClusters(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String search) {
-        
-        PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("createdAt").descending());
-        return ResponseEntity.ok(communityService.getClustersWithFilters(pageRequest, category, search));
+    @Operation(summary = "감정 테마별 커뮤니티 조회", description = "특정 감정 테마의 커뮤니티를 조회합니다.")
+    @GetMapping("/emotion-theme/{emotionTheme}")
+    public ResponseEntity<ApiResponse<List<Community>>> getCommunitiesByEmotionTheme(
+            @Parameter(description = "감정 테마") @PathVariable String emotionTheme) {
+        return ResponseEntity.ok(communityService.getCommunitiesByEmotionTheme(emotionTheme));
     }
 
     @Operation(summary = "커뮤니티 검색", description = "커뮤니티를 검색합니다.")
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<Community>>> searchClusters(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String emotionTheme,
-            @RequestParam(required = false) String creator) {
-        return ResponseEntity.ok(communityService.searchClusters(name, emotionTheme, creator));
+    public ResponseEntity<ApiResponse<List<Community>>> searchCommunities(
+            @Parameter(description = "검색어") @RequestParam String keyword,
+            @Parameter(description = "감정 테마") @RequestParam(required = false) String emotionTheme) {
+        return ResponseEntity.ok(communityService.searchCommunities(keyword, emotionTheme));
     }
 
-    @Operation(summary = "커뮤니티 추천", description = "커뮤니티를 추천합니다.")
-    @GetMapping("/recommended")
-    public ResponseEntity<ApiResponse<List<Community>>> getRecommendedClusters(
+    @Operation(summary = "사용자의 커뮤니티 목록 조회", description = "현재 로그인한 사용자가 참여 중인 커뮤니티 목록을 조회합니다.")
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<Community>>> getUserCommunities(
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(communityService.getRecommendedClusters(user));
+        return ResponseEntity.ok(communityService.getUserCommunities(user));
     }
 
-    @Operation(summary = "커뮤니티 인기", description = "인기 있는 커뮤니티를 조회합니다.")
-    @GetMapping("/trending")
-    public ResponseEntity<ApiResponse<List<Community>>> getTrendingClusters() {
-        return ResponseEntity.ok(communityService.getTrendingClusters());
+    @Operation(summary = "커뮤니티 가입", description = "커뮤니티에 가입합니다.")
+    @PostMapping("/{id}/join")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> joinCommunity(
+            @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(communityService.joinCommunity(id, user));
+    }
+
+    @Operation(summary = "커뮤니티 탈퇴", description = "커뮤니티에서 탈퇴합니다.")
+    @PostMapping("/{id}/leave")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> leaveCommunity(
+            @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(communityService.leaveCommunity(id, user));
     }
 } 
