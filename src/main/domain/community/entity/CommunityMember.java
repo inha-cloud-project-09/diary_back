@@ -40,4 +40,16 @@ public class CommunityMember {
         joinedAt = LocalDateTime.now();
         isActive = isActive == null ? true : isActive;
     }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setCommunity(Community community) {
+        this.community = community;
+    }
 }

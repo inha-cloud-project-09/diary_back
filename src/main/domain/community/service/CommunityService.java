@@ -26,6 +26,15 @@ public class CommunityService {
         try {
             community.setCreator(user);
             Community savedCommunity = communityRepository.save(community);
+            
+            // 생성자를 자동으로 멤버로 추가
+            CommunityMember member = CommunityMember.builder()
+                    .user(user)
+                    .community(savedCommunity)
+                    .isActive(true)
+                    .build();
+            savedCommunity.addMember(member);
+            
             return ApiResponse.success(savedCommunity);
         } catch (Exception e) {
             log.error("커뮤니티 생성 중 오류 발생", e);
@@ -131,16 +140,19 @@ public class CommunityService {
             Community community = communityRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
 
-            if (community.getMembers().stream().anyMatch(m -> m.getUser().equals(user) && m.getIsActive())) {
+            // 이미 가입되어 있는지 확인
+            if (communityRepository.findActiveMembership(user, community).isPresent()) {
                 throw new BusinessException("이미 가입된 커뮤니티입니다.");
             }
 
+            // 새로운 멤버십 생성
             CommunityMember member = CommunityMember.builder()
                     .user(user)
                     .community(community)
                     .isActive(true)
                     .build();
-            community.getMembers().add(member);
+            community.addMember(member);
+            
             return ApiResponse.success(null);
         } catch (BusinessException | ResourceNotFoundException e) {
             throw e;
@@ -156,13 +168,15 @@ public class CommunityService {
             Community community = communityRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
 
-            community.getMembers().stream()
-                    .filter(m -> m.getUser().equals(user) && m.getIsActive())
-                    .findFirst()
-                    .ifPresent(m -> m.setIsActive(false));
+            // 활성 멤버십 찾기
+            CommunityMember member = communityRepository.findActiveMembership(user, community)
+                    .orElseThrow(() -> new BusinessException("가입하지 않은 커뮤니티입니다."));
 
+            // 멤버십 비활성화
+            member.setIsActive(false);
+            
             return ApiResponse.success(null);
-        } catch (ResourceNotFoundException e) {
+        } catch (BusinessException | ResourceNotFoundException e) {
             throw e;
         } catch (Exception e) {
             log.error("커뮤니티 탈퇴 중 오류 발생", e);

@@ -1,6 +1,7 @@
 package com.diary.api.community.repository;
 
 import com.diary.api.community.Community;
+import com.diary.api.community.CommunityMember;
 import com.diary.api.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CommunityRepository extends JpaRepository<Community, Long> {
@@ -34,4 +36,8 @@ public interface CommunityRepository extends JpaRepository<Community, Long> {
     // 사용자가 참여한 커뮤니티 조회
     @Query("SELECT c FROM Community c JOIN c.members m WHERE m.user = :user AND m.isActive = true")
     List<Community> findByUserAndIsActive(@Param("user") User user);
+    
+    // 사용자의 커뮤니티 멤버십 조회
+    @Query("SELECT m FROM CommunityMember m WHERE m.user = :user AND m.community = :community AND m.isActive = true")
+    Optional<CommunityMember> findActiveMembership(@Param("user") User user, @Param("community") Community community);
 } 

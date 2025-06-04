@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "communities")
@@ -40,9 +42,30 @@ public class Community {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "community", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommunityMember> members = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         isDefault = isDefault == null ? true : isDefault;
         createdAt = LocalDateTime.now();
+    }
+
+    public void setCreator(User creator) {
+        this.creator = creator;
+    }
+
+    public void update(Community updateCommunity) {
+        this.name = updateCommunity.getName();
+        this.description = updateCommunity.getDescription();
+        this.emotionTheme = updateCommunity.getEmotionTheme();
+    }
+
+    public void addMember(CommunityMember member) {
+        this.members.add(member);
+    }
+
+    public void removeMember(CommunityMember member) {
+        this.members.remove(member);
     }
 }
