@@ -35,15 +35,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private final List<String> EXCLUDED_PATHS = Arrays.asList(
             "/login/oauth2",
             "/oauth2/",
-            "/api/auth/login",
             "/api/auth/google",
             "/h2-console",
-            "/api/videos/shared/no-login",
-            "/ws",
-            "/api/admin/videos/all",
-            "/api/health",
-            "/api/blogs",
-            "/api/images",
             "/swagger-ui",
             "/v3/api-docs"
     );

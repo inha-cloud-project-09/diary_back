@@ -74,48 +74,22 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                 long expirationMillis = 360000000L;
                 String jwt = jwtUtil.generateToken(loginUserEmail, loginUser.getId(), secret, expirationMillis);
 
-                ResponseCookie jwtCookie;
-                ResponseCookie roleCookie;
-
-                // 현재 활성화된 프로필 확인
-                boolean isProdProfile = Arrays.asList(environment.getActiveProfiles()).contains("prod");
                 String frontendUrl = environment.getProperty("frontend.url", "http://localhost:3000");
 
-                if (isProdProfile) {
-                    // 프로덕션 환경 설정
-                    jwtCookie = ResponseCookie.from("auth-token", jwt)
-                            .path("/")
-                            .httpOnly(true)
-                            .maxAge(Duration.ofSeconds(expirationMillis / 1000))
-                            .secure(true)
-                            .sameSite("None")
-                            .build();
+                // 환경에 상관없이 동일한 쿠키 설정 적용
+                ResponseCookie jwtCookie = ResponseCookie.from("auth-token", jwt)
+                        .path("/")
+                        .httpOnly(true)
+                        .maxAge(Duration.ofSeconds(expirationMillis / 1000))
+                        .secure(false)
+                        .build();
 
-                    // role 필드 대신 DEFAULT_USER_ROLE 사용
-                    roleCookie = ResponseCookie.from("userRole", DEFAULT_USER_ROLE)
-                            .path("/")
-                            .httpOnly(true)
-                            .maxAge(Duration.ofSeconds(expirationMillis / 1000))
-                            .secure(true)
-                            .sameSite("None")
-                            .build();
-                } else {
-                    // 개발 환경 설정
-                    jwtCookie = ResponseCookie.from("auth-token", jwt)
-                            .path("/")
-                            .httpOnly(false)
-                            .maxAge(Duration.ofSeconds(expirationMillis / 1000))
-                            .secure(false)
-                            .build();
-
-                    // role 필드 대신 DEFAULT_USER_ROLE 사용
-                    roleCookie = ResponseCookie.from("userRole", DEFAULT_USER_ROLE)
-                            .path("/")
-                            .httpOnly(false)
-                            .maxAge(Duration.ofSeconds(expirationMillis / 1000))
-                            .secure(false)
-                            .build();
-                }
+                ResponseCookie roleCookie = ResponseCookie.from("userRole", DEFAULT_USER_ROLE)
+                        .path("/")
+                        .httpOnly(false)
+                        .maxAge(Duration.ofSeconds(expirationMillis / 1000))
+                        .secure(false)
+                        .build();
 
                 response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
                 response.addHeader(HttpHeaders.SET_COOKIE, roleCookie.toString());
