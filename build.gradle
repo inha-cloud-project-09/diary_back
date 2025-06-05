@@ -31,6 +31,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
     implementation 'jakarta.el:jakarta.el-api:5.0.1'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
 
     compileOnly 'org.projectlombok:lombok'

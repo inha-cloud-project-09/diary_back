@@ -44,6 +44,18 @@ cloud:
     region:
       static: us-east-1
 
+management:
+  endpoints:  # endpoint가 아니라 endpoints
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info  # 노출할 엔드포인트 명시
+  endpoint:
+    health:
+      show-details: when-authorized  # 헬스체크 상세 정보 표시 조건
+  health:
+    db:
+      enabled: true  # DB 헬스체크 활성화
+
 jwt:
   secret: 8a620a6cb951f5072105c91b9aec1a0399f3363712f729f04804f14379c07c5d5e70fdd28f807d3a4a2b59f23f7a0d9d28d91c924fafc7688426f8fdf1a5ed20
-
