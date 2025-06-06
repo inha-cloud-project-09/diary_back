@@ -34,6 +34,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
 
+    // [추가] 구글 API 클라이언트 라이브러리
+    implementation 'com.google.api-client:google-api-client:2.2.0'
+
+    // [추가] 구글 캘린더 API 라이브러리
+    implementation 'com.google.apis:google-api-services-calendar:v3-rev20220715-2.0.0'
+
+    // [추가] 구글 OAuth 클라이언트 (Jetty 포함)
+    // GoogleCredential을 사용하고 로컬에서 인증 테스트를 위해 필요할 수 있습니다.
+    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.34.1'
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'

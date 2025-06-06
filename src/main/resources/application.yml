@@ -30,7 +30,7 @@ spring:
             client-id: 1041447353700-ck5s40n1e4ua81tln06a10cas4pred83.apps.googleusercontent.com
             client-secret: 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
             client-name: Google
-            scope: "openid,profile,email"
+            scope: "openid,profile,email,https://www.googleapis.com/auth/calendar.events"
 
         provider:
           google:

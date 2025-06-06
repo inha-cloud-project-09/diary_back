@@ -74,6 +74,10 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                 long expirationMillis = 360000000L;
                 String jwt = jwtUtil.generateToken(loginUserEmail, loginUser.getId(), secret, expirationMillis);
 
+                // JWT 토큰 발급 로그 추가
+                log.info("[JWT 토큰 발급] 사용자: {}, 토큰: {}", loginUserEmail, jwt);
+
+
                 String frontendUrl = environment.getProperty("frontend.url", "http://localhost:3000");
 
                 // 환경에 상관없이 동일한 쿠키 설정 적용
