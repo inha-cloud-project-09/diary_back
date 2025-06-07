@@ -7,7 +7,7 @@ set -euo pipefail
 
 # SSH 접속 정보
 SSH_USER="ec2-user"
-SSH_HOST="54.80.148.39"
+SSH_HOST="54.173.8.160"
 SSH_KEY_PATH="/Users/songseungju/Downloads/inha-pj-09.pem"
 
 # 애플리케이션 정보 (실제 프로젝트 이름으로 변경하세요)

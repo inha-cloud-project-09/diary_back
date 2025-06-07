@@ -17,7 +17,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 // 허용할 오리진을 로컬+프로덕션 도메인으로 늘립니다
                 .allowedOrigins(
-                        "http://localhost:3000"
+                        "http://localhost:3000",
+                        "https://withudiary.my"
                 )
                 .allowCredentials(true)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")

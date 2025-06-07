@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -19,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -37,14 +37,16 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final Environment environment;
 
     // secret 값을 @Value 어노테이션으로 주입
-    @Value("${jwt.secret}")
-    private String secret;
+//    @Value("${jwt.secret}")
+//    private String secret;
+//
+//    @Value("${frontend.url}")
+//    private String frontendUrl;
 
-    @Value("${frontend.url}")
-    private String frontendUrl;
 
     // 모든 사용자에게 기본 권한 부여
     private final String DEFAULT_USER_ROLE = "USER";
+    // LoginSuccessHandler.java
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -52,47 +54,59 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                                         Authentication authentication)
             throws IOException, ServletException {
 
+        // 메서드 내에서 Environment를 통해 직접 설정 값을 가져옵니다.
+        String secretKey = environment.getProperty("jwt.secret");
+        String frontendUrl = environment.getProperty("frontend.url"); // application.yml의 frontend.url
+
+        // 설정 값 로드 실패 시 안전하게 처리
+        if (secretKey == null || secretKey.isBlank() || frontendUrl == null) {
+            log.error("### CRITICAL: 'jwt.secret' 또는 'frontend.url' 설정 값을 application.yml에서 찾을 수 없습니다! ###");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server configuration error");
+            return;
+        }
+
         User loginUser = extractLoginUser(authentication);
 
         if (loginUser != null) {
             try {
                 long expirationMillis = 3600000L; // 1시간
-                String jwt = jwtUtil.generateToken(loginUser.getEmail(), loginUser.getId(), secret, expirationMillis);
+                String jwt = jwtUtil.generateToken(loginUser.getEmail(), loginUser.getId(), secretKey, expirationMillis);
 
-                log.info("[JWT 토큰 발급] 사용자: {}, 토큰: {}", loginUser.getEmail(), jwt);
-
-                ResponseCookie.ResponseCookieBuilder jwtCookieBuilder = ResponseCookie.from("auth-token", jwt)
+                ResponseCookie jwtCookie = ResponseCookie.from("auth-token", jwt)
                         .path("/")
                         .httpOnly(true)
+                        .secure(true)                 // HTTPS 환경에서만 쿠키 전송
+                        .sameSite("None")             // 크로스-사이트 요청 허용 (secure: true 필요)
+                        .domain("withudiary.my")      // 쿠키가 유효한 도메인 설정
                         .maxAge(Duration.ofMillis(expirationMillis))
-                        .secure(true)
-                        .sameSite("None")
-                        .domain("withudiary.my");
+                        .build();
 
-                ResponseCookie.ResponseCookieBuilder roleCookieBuilder = ResponseCookie.from("userRole", DEFAULT_USER_ROLE)
+                ResponseCookie roleCookie = ResponseCookie.from("userRole", DEFAULT_USER_ROLE)
                         .path("/")
                         .httpOnly(false)
+                        .secure(true)                 // HTTPS 환경에서만 쿠키 전송
+                        .sameSite("None")             // 크로스-사이트 요청 허용 (secure: true 필요)
+                        .domain("withudiary.my")      // 쿠키가 유효한 도메인 설정
                         .maxAge(Duration.ofMillis(expirationMillis))
-                        .secure(true)
-                        .sameSite("None")
-                        .domain("withudiary.my");
+                        .build();
 
-                // 쿠키 생성 및 응답에 추가
-                ResponseCookie jwtCookie = jwtCookieBuilder.build();
-                ResponseCookie roleCookie = roleCookieBuilder.build();
-
+                // 쿠키를 응답 헤더에 추가
                 response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
                 response.addHeader(HttpHeaders.SET_COOKIE, roleCookie.toString());
 
-                // 지정된 프론트엔드 URL로 리다이렉트
+                // 프론트엔드 URL로 리다이렉트
                 response.sendRedirect(frontendUrl);
 
             } catch (Exception e) {
                 log.error("[JWT 생성 또는 리다이렉션 실패]", e);
-                response.sendRedirect(frontendUrl + "?error=jwt_error");
+                String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl)
+                        .path("/error").queryParam("code", "jwt_error").build().toUriString();
+                response.sendRedirect(errorUrl);
             }
         } else {
-            response.sendRedirect(frontendUrl + "?error=no_user_found");
+            String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl)
+                    .path("/error").queryParam("code", "no_user_found").build().toUriString();
+            response.sendRedirect(errorUrl);
         }
     }
 

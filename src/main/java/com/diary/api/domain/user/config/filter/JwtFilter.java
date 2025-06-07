@@ -60,7 +60,6 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             // JWT 토큰 추출 시도
             String token = extractToken(request);
-
             // 토큰이 없으면 다음 필터로 진행
             if (token == null) {
                 log.debug("[JwtFilter] JWT가 없습니다. URI={}", requestUri);

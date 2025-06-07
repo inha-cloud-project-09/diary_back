@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.0'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.3.0' // 최신 안정화 버전으로 수정
+    id 'io.spring.dependency-management' version '1.1.5' // Spring Boot 3.3.0에 맞는 버전
 }
 
 group = 'com.diary.api'
@@ -23,44 +23,38 @@ repositories {
     mavenCentral()
 }
 
+// Spring Boot 3.x에 맞는 버전으로 라이브러리 전체 수정
 dependencies {
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
-    implementation 'jakarta.el:jakarta.el-api:5.0.1'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
 
-    // [추가] 구글 API 클라이언트 라이브러리
-    implementation 'com.google.api-client:google-api-client:2.2.0'
-
-    // [추가] 구글 캘린더 API 라이브러리
-    implementation 'com.google.apis:google-api-services-calendar:v3-rev20220715-2.0.0'
-
-    // [추가] 구글 OAuth 클라이언트 (Jetty 포함)
-    // GoogleCredential을 사용하고 로컬에서 인증 테스트를 위해 필요할 수 있습니다.
-    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.34.1'
-
-    compileOnly 'org.projectlombok:lombok'
+    // DB & Lombok
     runtimeOnly 'com.mysql:mysql-connector-j'
+    compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
 
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
+    // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
-    implementation 'software.amazon.awssdk:s3:2.24.0'
+    // SpringDoc OpenAPI (Spring Boot 3.x 용으로 교체 및 통합)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 
-    // Swagger/OpenAPI
-    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
-    implementation 'org.springdoc:springdoc-openapi-security:1.7.0'
+    // Google API (기존 유지)
+    implementation 'com.google.api-client:google-api-client:2.2.0'
+    implementation 'com.google.apis:google-api-services-calendar:v3-rev20220715-2.0.0'
+    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.34.1'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
