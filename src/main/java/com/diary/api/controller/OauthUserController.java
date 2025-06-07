@@ -39,8 +39,8 @@ public class OauthUserController {
     @GetMapping("/google")
     public void googleLogin(HttpServletResponse response) throws IOException {
         // 환경에 따라 리다이렉트 URL 결정
-        //String redirectUrl = "https://withudiary.my/oauth2/authorization/google";
-        String redirectUrl = "http://localhost:8080/oauth2/authorization/google";
+        String redirectUrl = "https://withudiary.my/oauth2/authorization/google";
+        //String redirectUrl = "http://localhost:8080/oauth2/authorization/google";
         response.sendRedirect(redirectUrl);
     }
 
