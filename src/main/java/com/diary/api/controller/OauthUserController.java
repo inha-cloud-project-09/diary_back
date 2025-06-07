@@ -29,7 +29,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OauthUserController {
     private final UserRepository userRepository;
-    private final Environment environment;
 
     // 기본 사용자 권한
     private final String DEFAULT_USER_ROLE = "USER";
@@ -39,10 +38,8 @@ public class OauthUserController {
      */
     @GetMapping("/google")
     public void googleLogin(HttpServletResponse response) throws IOException {
-        // 현재 활성화된 프로필 확인
-        boolean isProdProfile = Arrays.asList(environment.getActiveProfiles()).contains("prod");
         // 환경에 따라 리다이렉트 URL 결정
-        String redirectUrl = "http://localhost:8080/oauth2/authorization/google";
+        String redirectUrl = "https://withudiary.my/oauth2/authorization/google";
         response.sendRedirect(redirectUrl);
     }
 

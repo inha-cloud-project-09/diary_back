@@ -66,8 +66,7 @@ public class SecurityConfig {
 
                 // OAuth2 (구글 등)
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(new LoginSuccessHandler(objectMapper, jwtUtil, secretKey, userService,
-                                userRepository, environment)))
+                        .successHandler(new LoginSuccessHandler(objectMapper, jwtUtil, userService, userRepository, environment)))
 
                 // 로그아웃
                 .logout(logout -> logout

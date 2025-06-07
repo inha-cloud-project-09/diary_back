@@ -1,3 +1,5 @@
+server:
+  forward-headers-strategy: native
 spring:
   profiles:
     active: local
@@ -59,3 +61,6 @@ management:
 
 jwt:
   secret: 8a620a6cb951f5072105c91b9aec1a0399f3363712f729f04804f14379c07c5d5e70fdd28f807d3a4a2b59f23f7a0d9d28d91c924fafc7688426f8fdf1a5ed20
+
+frontend:
+    url: https://withudiary.my/
