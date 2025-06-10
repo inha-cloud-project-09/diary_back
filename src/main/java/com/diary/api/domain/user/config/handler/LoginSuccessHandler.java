@@ -15,6 +15,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -35,13 +38,6 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final UserService userService;
     private final UserRepository userRepository;
     private final Environment environment;
-
-    // secret 값을 @Value 어노테이션으로 주입
-//    @Value("${jwt.secret}")
-//    private String secret;
-//
-//    @Value("${frontend.url}")
-//    private String frontendUrl;
 
 
     // 모든 사용자에게 기본 권한 부여
@@ -75,9 +71,9 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                 ResponseCookie jwtCookie = ResponseCookie.from("auth-token", jwt)
                         .path("/")
                         .httpOnly(true)
-                        .secure(true)                 // HTTPS 환경에서만 쿠키 전송
+                        .secure(true)                 // HTTPS 환경에서만 쿠키 전송 true
                         .sameSite("None")             // 크로스-사이트 요청 허용 (secure: true 필요)
-                        .domain("withudiary.my")      // 쿠키가 유효한 도메인 설정
+                        .domain("withudiary.my")      // 쿠키가 유효한 도메인 설정 withudiary.my
                         .maxAge(Duration.ofMillis(expirationMillis))
                         .build();
 
@@ -95,7 +91,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                 response.addHeader(HttpHeaders.SET_COOKIE, roleCookie.toString());
 
                 // 프론트엔드 URL로 리다이렉트
-                response.sendRedirect(frontendUrl);
+                response.sendRedirect(frontendUrl+"/dashboard");
 
             } catch (Exception e) {
                 log.error("[JWT 생성 또는 리다이렉션 실패]", e);
@@ -113,6 +109,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     private User extractLoginUser(Authentication authentication) {
         if (authentication.getPrincipal() instanceof OAuth2User oAuth2User) {
             Map<String, Object> attributes = oAuth2User.getAttributes();
+
             String email = (String) attributes.get("email");
             String sub = (String) attributes.get("sub");
             String name = (String) attributes.get("name");
