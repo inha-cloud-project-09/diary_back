@@ -4,10 +4,6 @@ import com.diary.api.common.ApiResponse;
 import com.diary.api.domain.community.entity.Community;
 import com.diary.api.domain.community.service.CommunityService;
 import com.diary.api.domain.user.entity.User;
-import com.diary.api.domain.user.repository.UserRepository;
-import com.diary.api.domain.user.service.UserService;
-import com.diary.api.domain.user.util.JwtUtil;
-import com.diary.api.domain.user.config.UserPrincipal;
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +15,6 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
-import java.util.ArrayList;
 
 @Tag(name = "Community", description = "커뮤니티 관련 API")
 @RestController
@@ -109,4 +104,4 @@ public class CommunityController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(communityService.leaveCommunity(id, user));
     }
-} 
+}

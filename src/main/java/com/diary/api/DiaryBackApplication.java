@@ -12,4 +12,4 @@ public class DiaryBackApplication {
         SpringApplication.run(DiaryBackApplication.class, args);
     }
 
-} 
+}
