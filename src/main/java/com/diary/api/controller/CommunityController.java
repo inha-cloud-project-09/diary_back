@@ -50,29 +50,31 @@ public class CommunityController {
         return ResponseEntity.ok(ApiResponse.success(CommunityDTO.from(community)));
     }
 
-//    @Operation(summary = "커뮤니티 수정", description = "커뮤니티 정보를 수정합니다.")
-//    @PutMapping("/{id}")
-//    @PreAuthorize("isAuthenticated()")
-//    public ResponseEntity<ApiResponse<CommunityDTO>> updateCommunity(
-//            @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
-//            @Valid @RequestBody Community updateCommunity,
-//            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-//        User user = userRepository.findByEmail(userPrincipal.getUsername())
-//                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-//        Community updatedCommunity = communityService.updateCommunity(id, updateCommunity, user).getData();
-//        return ResponseEntity.ok(ApiResponse.success(CommunityDTO.from(updatedCommunity)));
-//    }
+    // @Operation(summary = "커뮤니티 수정", description = "커뮤니티 정보를 수정합니다.")
+    // @PutMapping("/{id}")
+    // @PreAuthorize("isAuthenticated()")
+    // public ResponseEntity<ApiResponse<CommunityDTO>> updateCommunity(
+    // @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
+    // @Valid @RequestBody Community updateCommunity,
+    // @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    // User user = userRepository.findByEmail(userPrincipal.getUsername())
+    // .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    // Community updatedCommunity = communityService.updateCommunity(id,
+    // updateCommunity, user).getData();
+    // return
+    // ResponseEntity.ok(ApiResponse.success(CommunityDTO.from(updatedCommunity)));
+    // }
 
-//    @Operation(summary = "커뮤니티 삭제", description = "커뮤니티를 삭제합니다.")
-//    @DeleteMapping("/{id}")
-//    @PreAuthorize("isAuthenticated()")
-//    public ResponseEntity<ApiResponse<Void>> deleteCommunity(
-//            @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
-//            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-//        User user = userRepository.findByEmail(userPrincipal.getUsername())
-//                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-//        return ResponseEntity.ok(communityService.deleteCommunity(id, user));
-//    }
+    // @Operation(summary = "커뮤니티 삭제", description = "커뮤니티를 삭제합니다.")
+    // @DeleteMapping("/{id}")
+    // @PreAuthorize("isAuthenticated()")
+    // public ResponseEntity<ApiResponse<Void>> deleteCommunity(
+    // @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
+    // @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    // User user = userRepository.findByEmail(userPrincipal.getUsername())
+    // .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    // return ResponseEntity.ok(communityService.deleteCommunity(id, user));
+    // }
 
     @Operation(summary = "감정 테마별 커뮤니티 조회", description = "특정 감정 테마의 커뮤니티 목록을 조회합니다.")
     @GetMapping("/emotion/{emotionTheme}")
