@@ -19,7 +19,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * JWT 쿠키/헤더 검증 필터
@@ -47,6 +49,12 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         String requestUri = request.getRequestURI();
+        log.debug("[JwtFilter] 요청 URI: {}", requestUri);
+        log.debug("[JwtFilter] 요청 메서드: {}", request.getMethod());
+        log.debug("[JwtFilter] 모든 요청 헤더: {}", Collections.list(request.getHeaderNames()).stream()
+                .collect(Collectors.toMap(
+                        headerName -> headerName,
+                        request::getHeader)));
 
         // 인증이 필요 없는 경로 확인
         if (shouldSkipFilter(requestUri)) {
@@ -67,6 +75,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             // 토큰 검증 및 인증 처리
             if (!processToken(token, request)) {
+                log.debug("[JwtFilter] 토큰 검증 실패");
                 sendUnauthorizedResponse(response, "인증에 실패했습니다.");
                 return;
             }
@@ -136,10 +145,14 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private String getTokenFromHeader(HttpServletRequest request) {
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        log.debug("[JwtFilter] Authorization 헤더: {}", authorization);
+
         if (authorization != null && authorization.startsWith("Bearer ")) {
-            log.debug("[JwtFilter] 헤더에서 토큰 추출 성공");
-            return authorization.substring(7); // "Bearer " 이후 부분
+            String token = authorization.substring(7);
+            log.debug("[JwtFilter] 헤더에서 토큰 추출 성공: {}", token);
+            return token;
         }
+        log.debug("[JwtFilter] 유효한 Authorization 헤더가 없습니다");
         return null;
     }
 

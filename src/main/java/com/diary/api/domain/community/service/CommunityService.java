@@ -144,8 +144,15 @@ public class CommunityService {
             Community community = communityRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
 
+            // members 컬렉션을 명시적으로 로드
+            community.getMembers().size();
+
             // 이미 가입되어 있는지 확인
-            if (community.hasMember(user.getId())) {
+            boolean isAlreadyMember = community.getMembers().stream()
+                    .anyMatch(member -> member.getUserId().equals(user.getId()) &&
+                            Boolean.TRUE.equals(member.getIsActive()));
+
+            if (isAlreadyMember) {
                 throw new BusinessException("이미 가입된 커뮤니티입니다.");
             }
 
@@ -157,7 +164,7 @@ public class CommunityService {
         } catch (BusinessException | ResourceNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("커뮤니티 가입 중 오류 발생", e);
+            log.error("커뮤니티 가입 중 오류 발생: {}", e.getMessage(), e);
             throw new BusinessException("커뮤니티 가입에 실패했습니다.");
         }
     }

@@ -16,6 +16,13 @@ public class SwaggerConfig {
 
         @Bean
         public OpenAPI openAPI() {
+                SecurityScheme securityScheme = new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")
+                                .in(SecurityScheme.In.HEADER)
+                                .name("Authorization");
+
                 return new OpenAPI()
                                 .info(new Info()
                                                 .title("Diary API")
@@ -25,10 +32,7 @@ public class SwaggerConfig {
                                                                 .name("Diary Team")
                                                                 .email("your-email@example.com")))
                                 .components(new Components()
-                                                .addSecuritySchemes("bearerAuth", new SecurityScheme()
-                                                                .type(SecurityScheme.Type.HTTP)
-                                                                .scheme("bearer")
-                                                                .bearerFormat("JWT")))
+                                                .addSecuritySchemes("bearerAuth", securityScheme))
                                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
         }
 }
