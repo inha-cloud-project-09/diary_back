@@ -15,17 +15,13 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -39,92 +35,76 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final UserRepository userRepository;
     private final Environment environment;
 
-
-    // 모든 사용자에게 기본 권한 부여
-    private final String DEFAULT_USER_ROLE = "USER";
-    // LoginSuccessHandler.java
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        Authentication authentication)
+            HttpServletResponse response,
+            Authentication authentication)
             throws IOException, ServletException {
 
-        // 메서드 내에서 Environment를 통해 직접 설정 값을 가져옵니다.
-        String secretKey = environment.getProperty("jwt.secret");
-        String frontendUrl = environment.getProperty("frontend.url"); // application.yml의 frontend.url
+        log.info("[LoginSuccessHandler] 인증 성공 처리 시작");
 
-        // 설정 값 로드 실패 시 안전하게 처리
-        if (secretKey == null || secretKey.isBlank() || frontendUrl == null) {
-            log.error("### CRITICAL: 'jwt.secret' 또는 'frontend.url' 설정 값을 application.yml에서 찾을 수 없습니다! ###");
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server configuration error");
-            return;
+        String profile = environment.getProperty("spring.profiles.active", "local");
+        String frontendUrl = environment.getProperty("frontend.url", "http://localhost:3000");
+        String secretKey = environment.getProperty("jwt.secret");
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("JWT secret key가 설정되지 않았습니다.");
         }
 
-        User loginUser = extractLoginUser(authentication);
+        User user = extractLoginUser(authentication);
+        if (user == null) {
+            throw new IllegalStateException("로그인 사용자 정보를 찾을 수 없습니다.");
+        }
 
-        if (loginUser != null) {
-            try {
-                long expirationMillis = 3600000L; // 1시간
-                String jwt = jwtUtil.generateToken(loginUser.getEmail(), loginUser.getId(), secretKey, expirationMillis);
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), secretKey, 86400000L);
+        log.info("[LoginSuccessHandler] JWT 생성 완료: {}", token);
 
-                ResponseCookie jwtCookie = ResponseCookie.from("auth-token", jwt)
-                        .path("/")
-                        .httpOnly(true)
-                        .secure(true)                 // HTTPS 환경에서만 쿠키 전송 true
-                        .sameSite("None")             // 크로스-사이트 요청 허용 (secure: true 필요)
-                        .domain("withudiary.my")      // 쿠키가 유효한 도메인 설정 withudiary.my
-                        .maxAge(Duration.ofMillis(expirationMillis))
-                        .build();
+        if ("local".equals(profile)) {
+            // ✅ 로컬 환경: Swagger 테스트용 JSON 응답
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("token", token);
+            responseBody.put("userId", user.getId());
+            responseBody.put("email", user.getEmail());
 
-                ResponseCookie roleCookie = ResponseCookie.from("userRole", DEFAULT_USER_ROLE)
-                        .path("/")
-                        .httpOnly(false)
-                        .secure(true)                 // HTTPS 환경에서만 쿠키 전송
-                        .sameSite("None")             // 크로스-사이트 요청 허용 (secure: true 필요)
-                        .domain("withudiary.my")      // 쿠키가 유효한 도메인 설정
-                        .maxAge(Duration.ofMillis(expirationMillis))
-                        .build();
-
-                // 쿠키를 응답 헤더에 추가
-                response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
-                response.addHeader(HttpHeaders.SET_COOKIE, roleCookie.toString());
-
-                // 프론트엔드 URL로 리다이렉트
-                response.sendRedirect(frontendUrl+"/dashboard");
-
-            } catch (Exception e) {
-                log.error("[JWT 생성 또는 리다이렉션 실패]", e);
-                String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl)
-                        .path("/error").queryParam("code", "jwt_error").build().toUriString();
-                response.sendRedirect(errorUrl);
-            }
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write(objectMapper.writeValueAsString(responseBody));
         } else {
-            String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl)
-                    .path("/error").queryParam("code", "no_user_found").build().toUriString();
-            response.sendRedirect(errorUrl);
+            // ✅ 운영 환경: Secure 쿠키 + 리다이렉트
+            ResponseCookie cookie = ResponseCookie.from("auth-token", token)
+                    .path("/")
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("None")
+                    .maxAge(Duration.ofDays(1))
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            response.sendRedirect(frontendUrl + "/dashboard");
         }
     }
 
     private User extractLoginUser(Authentication authentication) {
         if (authentication.getPrincipal() instanceof OAuth2User oAuth2User) {
             Map<String, Object> attributes = oAuth2User.getAttributes();
-
             String email = (String) attributes.get("email");
             String sub = (String) attributes.get("sub");
             String name = (String) attributes.get("name");
-            return saveOrUpdateGoogleUser(email, sub, name);
+
+            if (email == null || sub == null) {
+                log.warn("OAuth2 사용자 정보 누락: email={}, sub={}", email, sub);
+                return null;
+            }
+
+            return userRepository.findByGoogleId(sub)
+                    .orElseGet(() -> userService.createGoogleUser(email, sub, name));
+
         } else if (authentication.getPrincipal() instanceof UserPrincipal userPrincipal) {
             return userRepository.findByEmail(userPrincipal.getUsername())
-                    .orElseThrow(() -> new IllegalStateException("User not found"));
+                    .orElse(null);
         } else {
             log.warn("[인증 성공] 알 수 없는 Principal 타입: {}", authentication.getPrincipal());
             return null;
         }
-    }
-
-    private User saveOrUpdateGoogleUser(String email, String sub, String name) {
-        return userRepository.findByGoogleId(sub)
-                .orElseGet(() -> userService.createGoogleUser(email, sub, name));
     }
 }

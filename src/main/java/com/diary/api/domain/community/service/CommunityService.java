@@ -7,6 +7,7 @@ import com.diary.api.domain.community.entity.Community;
 import com.diary.api.domain.community.entity.CommunityMember;
 import com.diary.api.domain.user.entity.User;
 import com.diary.api.domain.community.repository.CommunityRepository;
+import com.diary.api.domain.community.repository.CommunityMemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,21 +21,18 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class CommunityService {
     private final CommunityRepository communityRepository;
+    private final CommunityMemberRepository communityMemberRepository;
 
     @Transactional
     public ApiResponse<Community> createCommunity(Community community, User user) {
         try {
             community.setCreator(user);
             Community savedCommunity = communityRepository.save(community);
-            
+
             // 생성자를 자동으로 멤버로 추가
-            CommunityMember member = CommunityMember.builder()
-                    .user(user)
-                    .community(savedCommunity)
-                    .isActive(true)
-                    .build();
-            savedCommunity.addMember(member);
-            
+            CommunityMember member = CommunityMember.create(user, savedCommunity);
+            communityMemberRepository.save(member);
+
             return ApiResponse.success(savedCommunity);
         } catch (Exception e) {
             log.error("커뮤니티 생성 중 오류 발생", e);
@@ -116,7 +114,8 @@ public class CommunityService {
     public ApiResponse<List<Community>> searchCommunities(String keyword, String emotionTheme) {
         try {
             if (emotionTheme != null && !emotionTheme.isEmpty()) {
-                return ApiResponse.success(communityRepository.findByEmotionThemeAndNameContaining(emotionTheme, keyword));
+                return ApiResponse
+                        .success(communityRepository.findByEmotionThemeAndNameContaining(emotionTheme, keyword));
             }
             return ApiResponse.success(communityRepository.findByNameContaining(keyword));
         } catch (Exception e) {
@@ -127,7 +126,7 @@ public class CommunityService {
 
     public ApiResponse<List<Community>> getUserCommunities(User user) {
         try {
-            return ApiResponse.success(communityRepository.findByUserAndIsActive(user));
+            return ApiResponse.success(communityRepository.findByUserIdAndIsActive(user.getId()));
         } catch (Exception e) {
             log.error("사용자의 커뮤니티 조회 중 오류 발생", e);
             throw new BusinessException("사용자의 커뮤니티 조회에 실패했습니다.");
@@ -141,18 +140,14 @@ public class CommunityService {
                     .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
 
             // 이미 가입되어 있는지 확인
-            if (communityRepository.findActiveMembership(user, community).isPresent()) {
+            if (community.hasMember(user.getId())) {
                 throw new BusinessException("이미 가입된 커뮤니티입니다.");
             }
 
             // 새로운 멤버십 생성
-            CommunityMember member = CommunityMember.builder()
-                    .user(user)
-                    .community(community)
-                    .isActive(true)
-                    .build();
-            community.addMember(member);
-            
+            CommunityMember member = CommunityMember.create(user, community);
+            communityMemberRepository.save(member);
+
             return ApiResponse.success(null);
         } catch (BusinessException | ResourceNotFoundException e) {
             throw e;
@@ -169,12 +164,13 @@ public class CommunityService {
                     .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
 
             // 활성 멤버십 찾기
-            CommunityMember member = communityRepository.findActiveMembership(user, community)
+            CommunityMember member = communityRepository.findActiveMembership(user.getId(), community.getId())
                     .orElseThrow(() -> new BusinessException("가입하지 않은 커뮤니티입니다."));
 
             // 멤버십 비활성화
             member.setIsActive(false);
-            
+            communityMemberRepository.save(member);
+
             return ApiResponse.success(null);
         } catch (BusinessException | ResourceNotFoundException e) {
             throw e;
@@ -183,4 +179,4 @@ public class CommunityService {
             throw new BusinessException("커뮤니티 탈퇴에 실패했습니다.");
         }
     }
-} 
+}

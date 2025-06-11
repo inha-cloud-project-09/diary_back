@@ -42,8 +42,7 @@ public class Community {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "community", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "community", fetch = FetchType.LAZY)
     private List<CommunityMember> members = new ArrayList<>();
 
     @PrePersist
@@ -62,11 +61,12 @@ public class Community {
         this.emotionTheme = updateCommunity.getEmotionTheme();
     }
 
-    public void addMember(CommunityMember member) {
-        this.members.add(member);
+    public boolean hasMember(Long userId) {
+        return members.stream()
+                .anyMatch(member -> member.getUserId().equals(userId) && member.getIsActive());
     }
 
-    public void removeMember(CommunityMember member) {
-        this.members.remove(member);
+    public boolean isCreator(Long userId) {
+        return creator != null && creator.getId().equals(userId);
     }
 }

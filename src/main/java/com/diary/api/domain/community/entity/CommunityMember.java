@@ -21,19 +21,25 @@ public class CommunityMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "community_id", nullable = false)
-    private Community community;
+    @Column(name = "community_id", nullable = false)
+    private Long communityId;
 
     @Column(name = "joined_at")
     private LocalDateTime joinedAt;
 
     @Column(name = "is_active")
     private Boolean isActive;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "community_id", insertable = false, updatable = false)
+    private Community community;
 
     @PrePersist
     protected void onCreate() {
@@ -45,11 +51,13 @@ public class CommunityMember {
         this.isActive = isActive;
     }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setCommunity(Community community) {
-        this.community = community;
+    public static CommunityMember create(User user, Community community) {
+        return CommunityMember.builder()
+                .userId(user.getId())
+                .communityId(community.getId())
+                .user(user)
+                .community(community)
+                .isActive(true)
+                .build();
     }
 }
