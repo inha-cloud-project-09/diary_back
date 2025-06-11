@@ -5,15 +5,21 @@ import com.diary.api.common.exception.BusinessException;
 import com.diary.api.common.exception.ResourceNotFoundException;
 import com.diary.api.domain.community.entity.Community;
 import com.diary.api.domain.community.entity.CommunityMember;
+import com.diary.api.domain.diary.entity.Diary;
+import com.diary.api.domain.diary.repository.DiaryRepository;
 import com.diary.api.domain.user.entity.User;
 import com.diary.api.domain.community.repository.CommunityRepository;
 import com.diary.api.domain.community.repository.CommunityMemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -22,6 +28,7 @@ import java.util.List;
 public class CommunityService {
     private final CommunityRepository communityRepository;
     private final CommunityMemberRepository communityMemberRepository;
+    private final DiaryRepository diaryRepository;
 
     @Transactional
     public ApiResponse<Community> createCommunity(Community community, User user) {
@@ -189,6 +196,38 @@ public class CommunityService {
         } catch (Exception e) {
             log.error("커뮤니티 탈퇴 중 오류 발생", e);
             throw new BusinessException("커뮤니티 탈퇴에 실패했습니다.");
+        }
+    }
+
+    /**
+     * 커뮤니티 멤버들이 작성한 공개 일기 중 최신 10개를 조회합니다.
+     * 
+     * @param communityId 커뮤니티 ID
+     * @return 공개된 일기 목록 (최신순 상위 10개)
+     */
+    public ApiResponse<List<Map<String, Object>>> getPublicCommunityDiaries(Long communityId) {
+        try {
+            Community community = communityRepository.findById(communityId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Community not found with id: " + communityId));
+
+            // 활성 멤버들의 ID 목록 추출
+            List<Long> memberIds = community.getMembers().stream()
+                    .filter(CommunityMember::getIsActive)
+                    .map(member -> member.getUser().getId())
+                    .collect(Collectors.toList());
+
+            // 최신순으로 상위 10개만 조회
+            PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+            List<Map<String, Object>> diaries = diaryRepository.findTop10ByUserIdInOrderByCreatedAtDesc(memberIds,
+                    pageRequest);
+
+            return ApiResponse.success(diaries);
+        } catch (ResourceNotFoundException e) {
+            log.error("Community not found: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching community diaries: {}", e.getMessage());
+            throw new RuntimeException("Failed to fetch community diaries", e);
         }
     }
 }

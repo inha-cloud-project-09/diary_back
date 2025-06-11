@@ -4,6 +4,7 @@ import com.diary.api.common.ApiResponse;
 import com.diary.api.domain.community.dto.CommunityDTO;
 import com.diary.api.domain.community.entity.Community;
 import com.diary.api.domain.community.service.CommunityService;
+import com.diary.api.domain.diary.entity.Diary;
 import com.diary.api.domain.user.config.UserPrincipal;
 import com.diary.api.domain.user.entity.User;
 import com.diary.api.domain.user.repository.UserRepository;
@@ -18,6 +19,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Tag(name = "Community", description = "커뮤니티 관련 API")
@@ -48,27 +50,29 @@ public class CommunityController {
         return ResponseEntity.ok(ApiResponse.success(CommunityDTO.from(community)));
     }
 
-    // @Operation(summary = "커뮤니티 수정", description = "커뮤니티 정보를 수정합니다.")
-    // @PutMapping("/{id}")
-    // @PreAuthorize("isAuthenticated()")
-    // public ResponseEntity<ApiResponse<CommunityDTO>> updateCommunity(
-    // @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
-    // @Valid @RequestBody Community updateCommunity,
-    // @AuthenticationPrincipal User user) {
-    // Community updatedCommunity = communityService.updateCommunity(id,
-    // updateCommunity, user).getData();
-    // return
-    // ResponseEntity.ok(ApiResponse.success(CommunityDTO.from(updatedCommunity)));
-    // }
+//    @Operation(summary = "커뮤니티 수정", description = "커뮤니티 정보를 수정합니다.")
+//    @PutMapping("/{id}")
+//    @PreAuthorize("isAuthenticated()")
+//    public ResponseEntity<ApiResponse<CommunityDTO>> updateCommunity(
+//            @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
+//            @Valid @RequestBody Community updateCommunity,
+//            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+//        User user = userRepository.findByEmail(userPrincipal.getUsername())
+//                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+//        Community updatedCommunity = communityService.updateCommunity(id, updateCommunity, user).getData();
+//        return ResponseEntity.ok(ApiResponse.success(CommunityDTO.from(updatedCommunity)));
+//    }
 
-    // @Operation(summary = "커뮤니티 삭제", description = "커뮤니티를 삭제합니다.")
-    // @DeleteMapping("/{id}")
-    // @PreAuthorize("isAuthenticated()")
-    // public ResponseEntity<ApiResponse<Void>> deleteCommunity(
-    // @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
-    // @AuthenticationPrincipal User user) {
-    // return ResponseEntity.ok(communityService.deleteCommunity(id, user));
-    // }
+//    @Operation(summary = "커뮤니티 삭제", description = "커뮤니티를 삭제합니다.")
+//    @DeleteMapping("/{id}")
+//    @PreAuthorize("isAuthenticated()")
+//    public ResponseEntity<ApiResponse<Void>> deleteCommunity(
+//            @Parameter(description = "커뮤니티 ID") @PathVariable Long id,
+//            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+//        User user = userRepository.findByEmail(userPrincipal.getUsername())
+//                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+//        return ResponseEntity.ok(communityService.deleteCommunity(id, user));
+//    }
 
     @Operation(summary = "감정 테마별 커뮤니티 조회", description = "특정 감정 테마의 커뮤니티 목록을 조회합니다.")
     @GetMapping("/emotion/{emotionTheme}")
@@ -127,5 +131,12 @@ public class CommunityController {
         User user = userRepository.findByEmail(userPrincipal.getUsername())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         return ResponseEntity.ok(communityService.leaveCommunity(id, user));
+    }
+
+    @Operation(summary = "커뮤니티 공개 일기 목록 조회", description = "커뮤니티 멤버들이 작성한 공개 일기 중 최신 10개를 조회합니다.")
+    @GetMapping("/{id}/diaries")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getPublicCommunityDiaries(
+            @Parameter(description = "커뮤니티 ID") @PathVariable Long id) {
+        return ResponseEntity.ok(communityService.getPublicCommunityDiaries(id));
     }
 }

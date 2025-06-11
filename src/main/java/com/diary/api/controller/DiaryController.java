@@ -3,7 +3,9 @@ package com.diary.api.controller;
 import com.diary.api.common.ApiResponse;
 import com.diary.api.domain.diary.entity.Diary;
 import com.diary.api.domain.diary.service.DiaryService;
+import com.diary.api.domain.user.config.UserPrincipal;
 import com.diary.api.domain.user.entity.User;
+import com.diary.api.domain.user.repository.UserRepository;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +25,16 @@ import io.swagger.v3.oas.annotations.*;
 @Tag(name = "Diary", description = "일기 관련 API")
 public class DiaryController {
     private final DiaryService diaryService;
+    private final UserRepository userRepository;
 
     @Operation(summary = "일기 생성", description = "새로운 일기를 생성합니다.")
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Diary>> createDiary(
             @Valid @RequestBody Diary diary,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        User user = userRepository.findByEmail(userPrincipal.getUsername())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         return ResponseEntity.ok(diaryService.createDiary(diary, user));
     }
 
@@ -37,7 +42,9 @@ public class DiaryController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Diary>> getDiary(
             @Parameter(description = "일기 ID") @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        User user = userRepository.findByEmail(userPrincipal.getUsername())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         return ResponseEntity.ok(diaryService.getDiary(id, user));
     }
 
@@ -45,7 +52,9 @@ public class DiaryController {
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<Diary>>> getMyDiaries(
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        User user = userRepository.findByEmail(userPrincipal.getUsername())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         return ResponseEntity.ok(diaryService.getUserDiaries(user));
     }
 
@@ -55,7 +64,9 @@ public class DiaryController {
     public ResponseEntity<ApiResponse<Diary>> updateDiary(
             @Parameter(description = "일기 ID") @PathVariable Long id,
             @Valid @RequestBody Diary updatedDiary,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        User user = userRepository.findByEmail(userPrincipal.getUsername())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         return ResponseEntity.ok(diaryService.updateDiary(id, updatedDiary, user));
     }
 
@@ -64,7 +75,9 @@ public class DiaryController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> deleteDiary(
             @Parameter(description = "일기 ID") @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        User user = userRepository.findByEmail(userPrincipal.getUsername())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         return ResponseEntity.ok(diaryService.deleteDiary(id, user));
     }
 
@@ -82,30 +95,26 @@ public class DiaryController {
         return ResponseEntity.ok(diaryService.getDiariesByTags(tags));
     }
 
-    @Operation(summary = "기간별 일기 조회", description = "특정 기간의 일기를 조회합니다.")
-    @GetMapping("/period")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByPeriod(
-            @Parameter(description = "시작일") @RequestParam LocalDateTime start,
-            @Parameter(description = "종료일") @RequestParam LocalDateTime end,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(diaryService.getUserDiariesByDateRange(user, start, end));
-    }
-
-    @Operation(summary = "분석 상태별 일기 조회", description = "특정 분석 상태의 일기를 조회합니다.")
-    @GetMapping("/analysis-status/{status}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByAnalysisStatus(
-            @Parameter(description = "분석 상태") @PathVariable String status) {
-        return ResponseEntity.ok(diaryService.getDiariesByAnalysisStatus(status));
-    }
+//    @Operation(summary = "기간별 일기 조회", description = "특정 기간의 일기를 조회합니다.")
+//    @GetMapping("/period")
+//    @PreAuthorize("isAuthenticated()")
+//    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByPeriod(
+//            @Parameter(description = "시작일") @RequestParam LocalDateTime start,
+//            @Parameter(description = "종료일") @RequestParam LocalDateTime end,
+//            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+//        User user = userRepository.findByEmail(userPrincipal.getUsername())
+//                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+//        return ResponseEntity.ok(diaryService.getUserDiariesByDateRange(user, start, end));
+//    }
 
     @Operation(summary = "사용자의 분석 상태별 일기 조회", description = "현재 로그인한 사용자의 특정 분석 상태의 일기를 조회합니다.")
     @GetMapping("/my/analysis-status/{status}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<Diary>>> getMyDiariesByAnalysisStatus(
             @Parameter(description = "분석 상태") @PathVariable String status,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        User user = userRepository.findByEmail(userPrincipal.getUsername())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         return ResponseEntity.ok(diaryService.getUserDiariesByAnalysisStatus(user, status));
     }
-} 
+}
