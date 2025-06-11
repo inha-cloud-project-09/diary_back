@@ -38,15 +38,13 @@ public class JwtFilter extends OncePerRequestFilter {
             "/api/auth/google",
             "/h2-console",
             "/swagger-ui",
-            "/v3/api-docs"
-    );
+            "/v3/api-docs");
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
 
         String requestUri = request.getRequestURI();
 
@@ -60,15 +58,18 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             // JWT 토큰 추출 시도
             String token = extractToken(request);
-            // 토큰이 없으면 다음 필터로 진행
+            // 토큰이 없으면 인증 실패 응답
             if (token == null) {
                 log.debug("[JwtFilter] JWT가 없습니다. URI={}", requestUri);
-                filterChain.doFilter(request, response);
+                sendUnauthorizedResponse(response, "인증 토큰이 필요합니다.");
                 return;
             }
 
             // 토큰 검증 및 인증 처리
-            processToken(token, request);
+            if (!processToken(token, request)) {
+                sendUnauthorizedResponse(response, "인증에 실패했습니다.");
+                return;
+            }
 
         } catch (Exception e) {
             // 예외 상세 정보 로깅
@@ -76,10 +77,18 @@ public class JwtFilter extends OncePerRequestFilter {
             if (log.isDebugEnabled()) {
                 e.printStackTrace();
             }
+            sendUnauthorizedResponse(response, "인증 처리 중 오류가 발생했습니다.");
+            return;
         }
 
         // 다음 필터로 진행
         filterChain.doFilter(request, response);
+    }
+
+    private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
 
     /**
@@ -110,7 +119,8 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private String getTokenFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null) return null;
+        if (cookies == null)
+            return null;
 
         for (Cookie cookie : cookies) {
             if ("auth-token".equals(cookie.getName())) {
@@ -135,25 +145,27 @@ public class JwtFilter extends OncePerRequestFilter {
 
     /**
      * 토큰 처리 및 인증 설정
+     * 
+     * @return 인증 성공 여부
      */
-    private void processToken(String token, HttpServletRequest request) {
+    private boolean processToken(String token, HttpServletRequest request) {
         // 토큰 만료 검사
         if (JwtUtil.isExpired(token, secretKey)) {
             log.debug("[JwtFilter] 만료된 토큰입니다");
-            return;
+            return false;
         }
 
         // 토큰에서 이메일 추출
         String email = JwtUtil.getEmail(token, secretKey);
         if (email == null) {
             log.debug("[JwtFilter] 토큰에서 이메일을 추출할 수 없습니다");
-            return;
+            return false;
         }
 
         // 이미 인증된 상태라면 처리하지 않음
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             log.debug("[JwtFilter] 이미 인증된 사용자입니다: {}", email);
-            return;
+            return true;
         }
 
         try {
@@ -164,18 +176,20 @@ public class JwtFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     userDetails,
                     null,
-                    userDetails.getAuthorities()
-            );
+                    userDetails.getAuthorities());
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             // SecurityContext에 인증 정보 저장
             SecurityContextHolder.getContext().setAuthentication(authToken);
             log.debug("[JwtFilter] 인증 완료: {}", email);
+            return true;
 
         } catch (UsernameNotFoundException e) {
             log.error("[JwtFilter] 사용자를 찾을 수 없습니다: {}", email);
+            return false;
         } catch (Exception e) {
             log.error("[JwtFilter] 인증 처리 중 오류 발생: {}", e.getMessage());
+            return false;
         }
     }
 }

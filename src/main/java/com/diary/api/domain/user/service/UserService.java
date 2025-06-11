@@ -31,7 +31,7 @@ public class UserService {
         // 새 사용자 생성
         User newUser = User.builder()
                 .email(email)
-                .googleId(googleId)  // User 엔티티의 googleId 필드에 sub 값 저장
+                .googleId(googleId) // User 엔티티의 googleId 필드에 sub 값 저장
                 .build();
 
         log.info("새 구글 사용자 생성: {}", email);
@@ -44,5 +44,27 @@ public class UserService {
     @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    @Transactional
+    public User upsertGoogleUser(String email, String googleId, String name) {
+        return userRepository.findByGoogleId(googleId)
+                .map(user -> {
+                    // email이 변경된 경우 업데이트
+                    if (!user.getEmail().equals(email)) {
+                        log.info("기존 사용자 이메일 변경: {} -> {}", user.getEmail(), email);
+                        user.setEmail(email);
+                    }
+                    // (name도 저장하고 싶다면 User에 필드 추가 후 setName 호출)
+                    return user;
+                })
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .email(email)
+                            .googleId(googleId)
+                            .build();
+                    log.info("신규 사용자 생성: {}", email);
+                    return userRepository.save(newUser);
+                });
     }
 }

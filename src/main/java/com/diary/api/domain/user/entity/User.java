@@ -1,10 +1,7 @@
 package com.diary.api.domain.user.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -23,6 +20,8 @@ public class User {
     @Column(name = "google_id", nullable = false, unique = true)
     private String googleId;
 
+    @Getter
+    @Setter
     @Column(nullable = false, unique = true)
     private String email;
 

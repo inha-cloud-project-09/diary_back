@@ -44,6 +44,11 @@ public class CommunityService {
         try {
             Community community = communityRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("커뮤니티를 찾을 수 없습니다."));
+
+            // creator와 members 관계를 명시적으로 로드
+            community.getCreator();
+            community.getMembers().size();
+
             return ApiResponse.success(community);
         } catch (ResourceNotFoundException e) {
             throw e;

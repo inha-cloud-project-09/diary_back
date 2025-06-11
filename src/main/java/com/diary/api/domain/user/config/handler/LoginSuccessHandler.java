@@ -37,8 +37,8 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
-            HttpServletResponse response,
-            Authentication authentication)
+                                        HttpServletResponse response,
+                                        Authentication authentication)
             throws IOException, ServletException {
 
         log.info("[LoginSuccessHandler] 인증 성공 처리 시작");
@@ -96,8 +96,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                 return null;
             }
 
-            return userRepository.findByGoogleId(sub)
-                    .orElseGet(() -> userService.createGoogleUser(email, sub, name));
+            return userService.upsertGoogleUser(email, sub, name);
 
         } else if (authentication.getPrincipal() instanceof UserPrincipal userPrincipal) {
             return userRepository.findByEmail(userPrincipal.getUsername())
