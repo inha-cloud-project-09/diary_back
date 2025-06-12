@@ -4,6 +4,7 @@ import com.diary.api.common.ApiResponse;
 import com.diary.api.domain.user.config.UserPrincipal;
 import com.diary.api.domain.user.entity.User;
 import com.diary.api.domain.user.repository.UserRepository;
+import com.diary.api.domain.user.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,11 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -37,7 +34,7 @@ public class OauthUserController {
     private final UserRepository userRepository;
     private final Environment environment;
     private final SecureRandom secureRandom = new SecureRandom();
-
+    private final UserService userService;
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
@@ -46,6 +43,25 @@ public class OauthUserController {
 
     // 기본 사용자 권한
     private final String DEFAULT_USER_ROLE = "USER";
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
+        return userService.findById(id)
+                .map(user -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("id", user.getId());
+                    result.put("email", user.getEmail());
+                    result.put("googleId", user.getGoogleId());
+                    result.put("createdAt", user.getCreatedAt());
+
+                    return ResponseEntity.ok(result);
+                })
+                .orElseGet(() -> {
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("error", "사용자를 찾을 수 없습니다");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+                });
+    }
 
     private String generateRandomString(int length) {
         byte[] randomBytes = new byte[length];
