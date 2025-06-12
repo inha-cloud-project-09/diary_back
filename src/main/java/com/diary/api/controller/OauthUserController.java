@@ -57,41 +57,9 @@ public class OauthUserController {
      * 구글 로그인 리다이렉트 (프런트에서 이 경로로 요청하면, 내부적으로 /oauth2/authorization/google 로 이동)
      */
     @GetMapping("/google")
-    public ResponseEntity<ApiResponse<Map<String, String>>> googleLogin(
-            @RequestParam(required = false) String error) {
+    public void googleLoginRedirect(HttpServletResponse response) throws IOException {
 
-        if (error != null) {
-            log.error("Google 로그인 에러: {}", error);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Google 로그인 실패: " + error));
-        }
-
-        // 환경에 따른 리다이렉트 URL 설정
-        String baseUrl = environment.getProperty("server.base-url", "http://localhost:8080");
-        String redirectUri = baseUrl + "/login/oauth2/code/google";
-
-        // 랜덤한 state와 nonce 생성
-        String state = generateRandomString(32);
-        String nonce = generateRandomString(32);
-
-        String authUrl = UriComponentsBuilder.fromUriString(googleAuthUri)
-                .queryParam("response_type", "code")
-                .queryParam("client_id", googleClientId)
-                .queryParam("scope", "openid profile email")
-                .queryParam("state", state)
-                .queryParam("redirect_uri", redirectUri)
-                .queryParam("nonce", nonce)
-                .build()
-                .toUriString();
-
-        log.info("Google login URL generated - baseUrl: {}, state: {}, nonce: {}", baseUrl, state, nonce);
-
-        // 프론트엔드에서 처리할 수 있도록 전체 URL 반환
-        return ResponseEntity.ok(ApiResponse.success(Map.of(
-                "url", authUrl,
-                "state", state,
-                "nonce", nonce,
-                "type", "oauth2")));
+        response.sendRedirect("/oauth2/authorization/google");
     }
 
     /**
