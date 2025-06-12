@@ -6,7 +6,6 @@ import com.diary.api.domain.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/chat")
@@ -27,10 +26,11 @@ public class ChatController {
             @RequestBody ChatCompletionRequest request,
             @RequestParam(required = false) String sessionId,
             @RequestParam(defaultValue = "false") boolean newConversation,
-            @RequestParam Long userId) { // AuthenticationPrincipal 대신 직접 파라미터로 받기
+            @RequestParam Long userId) {
 
         try {
-            ChatCompletionResponse response = chatService.createConversation(userId, sessionId, request);
+            ChatCompletionResponse response = chatService.createConversation(userId, sessionId,
+                    newConversation, request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace(); // 로그에 스택 트레이스 출력

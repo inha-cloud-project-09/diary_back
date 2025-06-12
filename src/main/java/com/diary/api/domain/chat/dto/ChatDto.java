@@ -23,6 +23,7 @@ public class ChatDto {
     @AllArgsConstructor
     public static class ChatCompletionResponse {
         private String response;
+        private String sessionId;
         private List<Message> conversationHistory;
     }
 

@@ -18,12 +18,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb
 
 ### 3. 대화 계속 (기존 세션 사용)
 # 세션 ID를 실제 응답에서 받은 값으로 교체하세요
-POST http://localhost:8080/api/chat/conversation?sessionId=b4a89c50-3be1-40d7-8f23-1e22f1587d2c&userId=38
+POST http://localhost:8080/api/chat/conversation?sessionId=3f47c4d4-682b-48e5-a93d-a0f4b8e62b50&userId=38
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
 
 {
-  "message": "오늘은 직장에서 성취감을 느꼈어요. 이런 감정을 어떻게 더 발전시킬까요?"
+  "message": "제가 머한다고 했었죠?"
 }
 
 ### 4. 새 대화 강제 시작
@@ -37,5 +37,5 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb
 
 ### 5. 대화 세션 삭제
 # 실제 존재하는 세션 ID로 교체하세요
-DELETE http://localhost:8080/api/chat/conversation/b4a89c50-3be1-40d7-8f23-1e22f1587d2c?userId=38
+DELETE http://localhost:8080/api/chat/conversation/ea97d796-92b2-4d10-8d59-c34308b360b1?userId=38
 Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
