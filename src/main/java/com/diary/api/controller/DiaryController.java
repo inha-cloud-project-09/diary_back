@@ -40,6 +40,7 @@ public class DiaryController {
 
     @Operation(summary = "일기 조회", description = "ID로 일기를 조회합니다.")
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Diary>> getDiary(
             @Parameter(description = "일기 ID") @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
@@ -95,17 +96,18 @@ public class DiaryController {
         return ResponseEntity.ok(diaryService.getDiariesByTags(tags));
     }
 
-//    @Operation(summary = "기간별 일기 조회", description = "특정 기간의 일기를 조회합니다.")
-//    @GetMapping("/period")
-//    @PreAuthorize("isAuthenticated()")
-//    public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByPeriod(
-//            @Parameter(description = "시작일") @RequestParam LocalDateTime start,
-//            @Parameter(description = "종료일") @RequestParam LocalDateTime end,
-//            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-//        User user = userRepository.findByEmail(userPrincipal.getUsername())
-//                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-//        return ResponseEntity.ok(diaryService.getUserDiariesByDateRange(user, start, end));
-//    }
+    // @Operation(summary = "기간별 일기 조회", description = "특정 기간의 일기를 조회합니다.")
+    // @GetMapping("/period")
+    // @PreAuthorize("isAuthenticated()")
+    // public ResponseEntity<ApiResponse<List<Diary>>> getDiariesByPeriod(
+    // @Parameter(description = "시작일") @RequestParam LocalDateTime start,
+    // @Parameter(description = "종료일") @RequestParam LocalDateTime end,
+    // @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    // User user = userRepository.findByEmail(userPrincipal.getUsername())
+    // .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    // return ResponseEntity.ok(diaryService.getUserDiariesByDateRange(user, start,
+    // end));
+    // }
 
     @Operation(summary = "사용자의 분석 상태별 일기 조회", description = "현재 로그인한 사용자의 특정 분석 상태의 일기를 조회합니다.")
     @GetMapping("/my/analysis-status/{status}")
