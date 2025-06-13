@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -54,11 +56,16 @@ public class DiaryService {
 
     public ApiResponse<List<Diary>> getUserDiaries(User user) {
         try {
+            log.info("사용자 ID: {}의 일기 목록 조회 시작", user.getId());
             List<Diary> diaries = diaryRepository.findByUser(user);
+            log.info("조회된 일기 수: {}", diaries.size());
             return ApiResponse.success(diaries);
         } catch (Exception e) {
-            log.error("사용자 일기 조회 중 오류 발생", e);
-            throw new BusinessException("일기 조회에 실패했습니다.");
+            log.error("사용자 일기 조회 중 오류 발생: {}", e.getMessage(), e);
+            if (e.getCause() != null) {
+                log.error("원인: {}", e.getCause().getMessage());
+            }
+            throw new BusinessException("일기 조회에 실패했습니다: " + e.getMessage());
         }
     }
 
@@ -156,4 +163,18 @@ public class DiaryService {
             throw new BusinessException("분석 상태별 일기 조회에 실패했습니다.");
         }
     }
-} 
+
+    /**
+     * Diary 엔티티의 emotion_vector를 반환합니다.
+     */
+    public List<Double> getEmotionVectorAsDouble(Diary diary) {
+        return diary.getEmotionVector();
+    }
+
+    /**
+     * Diary 엔티티의 emotion_vector를 설정합니다.
+     */
+    public void setEmotionVector(Diary diary, List<Double> emotionVector) {
+        diary.setEmotionVector(emotionVector);
+    }
+}

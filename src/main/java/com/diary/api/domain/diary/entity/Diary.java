@@ -1,5 +1,7 @@
 package com.diary.api.domain.diary.entity;
 
+import com.diary.api.domain.diary.entity.converter.EmotionVectorConverter;
+import com.diary.api.domain.diary.entity.converter.TagsConverter;
 import com.diary.api.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,6 +12,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Entity
@@ -41,11 +44,14 @@ public class Diary {
     private String feedback;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> tags;
+    @Column(columnDefinition = "jsonb")
+    @Convert(converter = TagsConverter.class)
+    private List<String> tags;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "emotion_vector")
-    private Map<String, Double> emotionVector;
+    @Column(name = "emotion_vector", columnDefinition = "jsonb")
+    @Convert(converter = EmotionVectorConverter.class)
+    private List<Double> emotionVector;
 
     @Column(name = "primary_emotion", length = 50)
     private String primaryEmotion;
@@ -99,7 +105,7 @@ public class Diary {
         return this.primaryEmotion;
     }
 
-    public void setTags(Map<String, Object> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
@@ -116,5 +122,9 @@ public class Diary {
 
     public void setAnalysisStatus(String analysisStatus) {
         this.analysisStatus = analysisStatus;
+    }
+
+    public void setEmotionVector(List<Double> emotionVector) {
+        this.emotionVector = emotionVector;
     }
 }
