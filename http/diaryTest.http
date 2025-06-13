@@ -1,0 +1,41 @@
+### 1. 일기 생성
+POST http://localhost:8080/api/diaries
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+{
+  "content": "오늘은 정말 좋은 하루였습니다. 아침에 일어나서 산책을 했고, 오후에는 친구를 만났습니다.",
+  "isPublic": true,
+  "tags": ["행복", "친구", "산책"]
+}
+
+### 2. 일기 조회 (ID로)
+GET http://localhost:8080/api/diaries/1154
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+### 3. 내 일기 목록 조회
+GET http://localhost:8080/api/diaries/my
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+### 4. 일기 수정
+PUT http://localhost:8080/api/diaries/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+{
+  "content": "수정된 일기 내용입니다. 오늘은 정말 특별한 하루였어요!",
+  "isPublic": false,
+  "tags": ["수정됨", "특별한 날"]
+}
+
+### 5. 일기 삭제
+DELETE http://localhost:8080/api/diaries/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+### 6. 감정별 일기 조회
+GET http://localhost:8080/api/diaries/emotion/행복
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+### 7. 태그별 일기 조회
+GET http://localhost:8080/api/diaries/tags?tags=행복&tags=친구
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA

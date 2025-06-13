@@ -1,6 +1,7 @@
 package com.diary.api.controller;
 
 import com.diary.api.common.ApiResponse;
+import com.diary.api.domain.diary.dto.DiaryDto;
 import com.diary.api.domain.diary.entity.Diary;
 import com.diary.api.domain.diary.service.DiaryService;
 import com.diary.api.domain.user.config.UserPrincipal;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.*;
 
@@ -41,22 +43,27 @@ public class DiaryController {
         @Operation(summary = "일기 조회", description = "ID로 일기를 조회합니다.")
         @GetMapping("/{id}")
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ApiResponse<Diary>> getDiary(
-                        @Parameter(description = "일기 ID") @PathVariable Long id,
-                        @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        public ResponseEntity<ApiResponse<DiaryDto>> getDiary(
+                @Parameter(description = "일기 ID") @PathVariable Long id,
+                @AuthenticationPrincipal UserPrincipal userPrincipal) {
                 User user = userRepository.findByEmail(userPrincipal.getUsername())
-                                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-                return ResponseEntity.ok(diaryService.getDiary(id, user));
+                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                Diary diary = diaryService.getDiary(id, user).getData();
+                return ResponseEntity.ok(ApiResponse.success(DiaryDto.from(diary)));
         }
 
         @Operation(summary = "사용자 일기 목록 조회", description = "현재 로그인한 사용자의 모든 일기를 조회합니다.")
         @GetMapping("/my")
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ApiResponse<List<Diary>>> getMyDiaries(
-                        @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        public ResponseEntity<ApiResponse<List<DiaryDto>>> getMyDiaries(
+                @AuthenticationPrincipal UserPrincipal userPrincipal) {
                 User user = userRepository.findByEmail(userPrincipal.getUsername())
-                                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-                return ResponseEntity.ok(diaryService.getUserDiaries(user));
+                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                List<Diary> diaries = diaryService.getUserDiaries(user).getData();
+                List<DiaryDto> dtoList = diaries.stream()
+                        .map(DiaryDto::from)
+                        .collect(Collectors.toList());
+                return ResponseEntity.ok(ApiResponse.success(dtoList));
         }
 
         @Operation(summary = "일기 수정", description = "기존 일기를 수정합니다.")
