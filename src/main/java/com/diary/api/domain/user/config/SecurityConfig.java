@@ -79,7 +79,8 @@ public class SecurityConfig {
                                 "/api/auth/google",
                                 "/login/oauth2/code/**",
                                 "/oauth2/authorization/**",
-                                "/error")
+                                "/error",
+                                "api/auth/{id}")
                         .permitAll()
                         .anyRequest().authenticated())
 
@@ -174,6 +175,7 @@ public class SecurityConfig {
                 "Authorization",
                 "Content-Type",
                 "X-Requested-With",
+                "X-Request-ID",
                 "Accept",
                 "Origin",
                 "Access-Control-Request-Method",
