@@ -4,6 +4,7 @@ import com.diary.api.common.ApiResponse;
 import com.diary.api.domain.user.config.UserPrincipal;
 import com.diary.api.domain.user.entity.User;
 import com.diary.api.domain.user.repository.UserRepository;
+import com.diary.api.domain.user.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,11 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -37,7 +34,7 @@ public class OauthUserController {
     private final UserRepository userRepository;
     private final Environment environment;
     private final SecureRandom secureRandom = new SecureRandom();
-
+    private final UserService userService;
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
@@ -46,6 +43,25 @@ public class OauthUserController {
 
     // 기본 사용자 권한
     private final String DEFAULT_USER_ROLE = "USER";
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
+        return userService.findById(id)
+                .map(user -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("id", user.getId());
+                    result.put("email", user.getEmail());
+                    result.put("googleId", user.getGoogleId());
+                    result.put("createdAt", user.getCreatedAt());
+
+                    return ResponseEntity.ok(result);
+                })
+                .orElseGet(() -> {
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("error", "사용자를 찾을 수 없습니다");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+                });
+    }
 
     private String generateRandomString(int length) {
         byte[] randomBytes = new byte[length];
@@ -57,41 +73,9 @@ public class OauthUserController {
      * 구글 로그인 리다이렉트 (프런트에서 이 경로로 요청하면, 내부적으로 /oauth2/authorization/google 로 이동)
      */
     @GetMapping("/google")
-    public ResponseEntity<ApiResponse<Map<String, String>>> googleLogin(
-            @RequestParam(required = false) String error) {
+    public void googleLoginRedirect(HttpServletResponse response) throws IOException {
 
-        if (error != null) {
-            log.error("Google 로그인 에러: {}", error);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Google 로그인 실패: " + error));
-        }
-
-        // 환경에 따른 리다이렉트 URL 설정
-        String baseUrl = environment.getProperty("server.base-url", "http://localhost:8080");
-        String redirectUri = baseUrl + "/login/oauth2/code/google";
-
-        // 랜덤한 state와 nonce 생성
-        String state = generateRandomString(32);
-        String nonce = generateRandomString(32);
-
-        String authUrl = UriComponentsBuilder.fromUriString(googleAuthUri)
-                .queryParam("response_type", "code")
-                .queryParam("client_id", googleClientId)
-                .queryParam("scope", "openid profile email")
-                .queryParam("state", state)
-                .queryParam("redirect_uri", redirectUri)
-                .queryParam("nonce", nonce)
-                .build()
-                .toUriString();
-
-        log.info("Google login URL generated - baseUrl: {}, state: {}, nonce: {}", baseUrl, state, nonce);
-
-        // 프론트엔드에서 처리할 수 있도록 전체 URL 반환
-        return ResponseEntity.ok(ApiResponse.success(Map.of(
-                "url", authUrl,
-                "state", state,
-                "nonce", nonce,
-                "type", "oauth2")));
+        response.sendRedirect("/oauth2/authorization/google");
     }
 
     /**

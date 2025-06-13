@@ -1,0 +1,41 @@
+### 1. 단일 채팅 완료 요청 테스트
+POST http://localhost:8080/api/chat/completions
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+{
+  "message": "오늘 기분이 우울해요. 좋은 조언 부탁해요."
+}
+
+### 2. 대화 시작 (간단 버전 - 디버깅용)
+POST http://localhost:8080/api/chat/conversation?userId=38
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+{
+  "message": "안녕하세요, 저는 감정 다이어리를 작성하려고 합니다."
+}
+
+### 3. 대화 계속 (기존 세션 사용)
+# 세션 ID를 실제 응답에서 받은 값으로 교체하세요
+POST http://localhost:8080/api/chat/conversation?sessionId=3f47c4d4-682b-48e5-a93d-a0f4b8e62b50&userId=38
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+{
+  "message": "제가 머한다고 했었죠?"
+}
+
+### 4. 새 대화 강제 시작
+POST http://localhost:8080/api/chat/conversation?newConversation=true&userId=38
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA
+
+{
+  "message": "새로운 주제로 시작하고 싶어요. 긍정적인 마인드를 유지하는 방법은?"
+}
+
+### 5. 대화 세션 삭제
+# 실제 존재하는 세션 ID로 교체하세요
+DELETE http://localhost:8080/api/chat/conversation/ea97d796-92b2-4d10-8d59-c34308b360b1?userId=38
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3a3dqc3JqNTA3OUBnbWFpbC5jb20iLCJ1c2VySWQiOjM4LCJpYXQiOjE3NDk3MjY3NjcsImV4cCI6MTc0OTgxMzE2N30.yXeuTm6E596E6Ip9JY7FNiXE3FdvZRO-xCKZ-2pdJCA

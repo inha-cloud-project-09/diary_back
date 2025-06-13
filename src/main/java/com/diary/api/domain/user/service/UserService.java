@@ -14,7 +14,13 @@ import java.util.Optional;
 @Slf4j
 public class UserService {
     private final UserRepository userRepository;
-
+    /**
+     * ID로 사용자 조회
+     */
+    @Transactional(readOnly = true)
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
     /**
      * 구글 로그인 사용자 정보로 새 사용자 생성 또는 기존 사용자 정보 업데이트
      */

@@ -2,7 +2,7 @@ server:
   forward-headers-strategy: native
 spring:
   profiles:
-    active: local
+    active: prod
 
   datasource:
     url: jdbc:mysql://inha-pj-09-rds.cj24wem202yj.us-east-1.rds.amazonaws.com:3306/emotion_diary
@@ -64,3 +64,13 @@ jwt:
 
 frontend:
   url: https://withudiary.my
+
+openai:
+  api-key: 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
+  model: gpt-3.5-turbo
+  max-tokens: 1000
+  temperature: 0.7
+  timeout:
+    connect: 30000
+    read: 30000
+    write: 30000

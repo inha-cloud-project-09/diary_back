@@ -79,6 +79,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                     .maxAge(Duration.ofDays(1))
                     .build();
 
+
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             response.sendRedirect(frontendUrl + "/dashboard");
         }
