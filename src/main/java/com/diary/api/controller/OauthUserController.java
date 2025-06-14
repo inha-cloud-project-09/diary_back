@@ -5,6 +5,7 @@ import com.diary.api.domain.user.config.UserPrincipal;
 import com.diary.api.domain.user.entity.User;
 import com.diary.api.domain.user.repository.UserRepository;
 import com.diary.api.domain.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +82,10 @@ public class OauthUserController {
     /**
      * 현재 로그인 사용자 정보 조회
      */
+    @Operation(
+            summary = "현재 로그인 사용자 정보 조회",
+            description = "JWT 토큰에서 추출한 사용자 정보를 통해 현재 로그인된 사용자의 상세 정보를 반환합니다."
+    )
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         // 인증되지 않은 사용자 처리
