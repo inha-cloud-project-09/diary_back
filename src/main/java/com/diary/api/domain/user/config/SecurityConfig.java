@@ -105,7 +105,7 @@ public class SecurityConfig {
 
                 // 세션을 사용하지 않고 JWT로 stateless 처리
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // 로그아웃 처리
                 .logout(logout -> logout

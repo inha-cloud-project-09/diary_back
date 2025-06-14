@@ -75,7 +75,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                     .path("/")
                     .httpOnly(true)
                     .secure(true)
-                    .sameSite("Lax")
+                    .sameSite("None")
                     .maxAge(Duration.ofDays(1))
                     .build();
 
