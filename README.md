@@ -41,15 +41,10 @@ cd diary_back
 # DB_PASS=password
 # DB_NAME=diary_db
 # JWT_SECRET=your_jwt_token_key
-# PORT=4000
+# PORT=8080
 
-npm install
-
-# 2. 데이터베이스 마이그레이션 (ORM 사용 시)
-npm run migrate
-
-# 3. 개발 서버 실행
-npm run dev
+# 2. 개발 서버 실행
+bash ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
 
 브라우저 혹은 API 테스트 도구(Postman / Insomnia 등)를 이용해 `http://localhost:8080/api/...` 엔드포인트로 접근 가능합니다.
@@ -86,17 +81,6 @@ PORT=4000
 ```
 
 필요한 변수는 코드 내 `config` 디렉토리 또는 `.env.example` 파일을 참고하세요.
-
----
-
-## 🧪 테스트
-
-```bash
-npm test
-```
-
-테스트 코드가 포함되어 있다면, 유닛/통합 테스트 실행을 위해 위 명령을 사용하세요.
-
 ---
 
 ## 🧑‍💻 개발자 안내
@@ -114,11 +98,11 @@ npm test
    ```
 
 2. **감정 분석 로직**
-   - `services/emotionService.js`에서 구현
+   - `services/emotionService.java`에서 구현
    - 외부 라이브러리, API, 머신러닝 모델 등 연동
 
 3. **인증 미들웨어**
-   - `middlewares/auth.js`에서 JWT 검증, 사용자 권한 체크
+   - `middlewares/auth.java`에서 JWT 검증, 사용자 권한 체크
 
 4. **유닛 테스트**
    - `tests/` 디렉토리 내 `jest` / `mocha` 등으로 구성
